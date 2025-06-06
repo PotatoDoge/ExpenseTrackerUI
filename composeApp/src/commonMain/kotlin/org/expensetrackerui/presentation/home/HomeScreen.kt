@@ -4,7 +4,19 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +28,12 @@ import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.OtherHouses
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.SportsMotorsports
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -113,13 +130,12 @@ val sampleRecentTransactions = listOf(
 )
 
 val tipBackgroundColors = listOf(
-    Color(0xFFE0F7FA), // Verde agua suave
-    Color(0xFFE8F5E9), // Verde pastel
-    Color(0xFFF3E5F5), // Lavanda suave
-    Color(0xFFFFFDE7)  // Amarillo muy claro
+    Color(0xFFE0F7FA),
+    Color(0xFFE8F5E9),
+    Color(0xFFF3E5F5),
+    Color(0xFFFFFDE7)
 )
 
-// Define tus FinancialTips con los recursos de imagen (y asegura que los IDs de tus recursos coincidan)
 val sampleFinancialTips = listOf(
     FinancialTip("Ahorra a tiempo", "Consejos para el supermercado.", Res.drawable.tip_ahorro),
     FinancialTip("Haz un presupuesto", "Guía paso a paso.", Res.drawable.tip_presupuesto),
@@ -240,15 +256,13 @@ fun HomeScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()) // Scroll horizontal
-                .padding(horizontal = 0.dp) // Espacio entre tarjetas
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 0.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // El padding lateral del scroll horizontal se manejará aquí,
-            // si la primera y última tarjeta deben tener un padding mayor.
-            // Por ahora, el padding principal del Column ya lo maneja.
-
-            sampleFinancialTips.forEachIndexed { index, tip -> // Usa index para asignar un color
-                val backgroundColor = tipBackgroundColors.getOrElse(index % tipBackgroundColors.size) { Color.LightGray }
+            sampleFinancialTips.forEachIndexed { index, tip ->
+                val backgroundColor =
+                    tipBackgroundColors.getOrElse(index % tipBackgroundColors.size) { Color.LightGray }
                 FinancialTipCard(tip = tip, backgroundColor = backgroundColor) {
                     println("Tip clicked: ${tip.title}")
                 }
@@ -324,7 +338,6 @@ fun BudgetCard(budget: BudgetSummary) {
                 contentScale = ContentScale.Crop
             )
 
-            // Original content (Expenses and Income)
             Row(
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceAround,
@@ -469,34 +482,32 @@ fun TotalSpendingBar(items: List<SpendingItem>, totalAmount: Double) {
 
 @Composable
 fun FinancialTipCard(tip: FinancialTip, backgroundColor: Color, onClick: () -> Unit) {
-    // La Column principal actúa ahora como el contenedor de la "tarjeta"
     Column(
         modifier = Modifier
-            .width(160.dp) // Ancho fijo de la "tarjeta"
-            .height(220.dp) // Altura de la "tarjeta"
-            .clip(RoundedCornerShape(12.dp)) // Las esquinas redondeadas para toda la "tarjeta"
-            .background(MaterialTheme.colorScheme.surface) // Color de fondo de la "tarjeta"
-            .clickable(onClick = onClick) // Hace que toda la "tarjeta" sea clicable
-            .padding(bottom = 8.dp), // Padding inferior para el contenido de texto
-        horizontalAlignment = Alignment.CenterHorizontally, // Centra horizontalmente el contenido (la imagen, principalmente)
-        verticalArrangement = Arrangement.Top // Alinea el contenido en la parte superior
+            .width(160.dp)
+            .height(220.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
+            .padding(bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
     ) {
-        Spacer(Modifier.height(10.dp)) // Pequeño espacio en la parte superior antes de la imagen
+        Spacer(Modifier.height(10.dp))
 
-        // 1. Imagen cuadrada y recortada
         Box(
             modifier = Modifier
-                .size(140.dp) // Tamaño fijo cuadrado para la imagen
-                .clip(RoundedCornerShape(12.dp)) // **TODAS las esquinas de la imagen se redondean**
-                .background(backgroundColor), // Color de fondo pastel para la imagen
+                .size(140.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(backgroundColor),
             contentAlignment = Alignment.Center
         ) {
             tip.imageRes?.let { imageRes ->
                 Image(
                     painter = painterResource(imageRes),
                     contentDescription = null,
-                    modifier = Modifier.fillMaxSize(), // La imagen llena todo el Box
-                    contentScale = ContentScale.Crop // La imagen se recorta para llenar el cuadrado
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             } ?: run {
                 Icon(
@@ -508,13 +519,11 @@ fun FinancialTipCard(tip: FinancialTip, backgroundColor: Color, onClick: () -> U
             }
         }
 
-        // Contenedor para el texto (Título y Descripción)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp) // Padding para el texto
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            // 2. Título corto
             Text(
                 text = tip.title,
                 fontSize = 14.sp,
@@ -524,9 +533,7 @@ fun FinancialTipCard(tip: FinancialTip, backgroundColor: Color, onClick: () -> U
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth()
             )
-            // No hay Spacer aquí, queremos que la descripción esté justo debajo del título
 
-            // 3. Descripción muy breve
             Text(
                 text = tip.subtitle,
                 fontSize = 12.sp,
@@ -539,6 +546,7 @@ fun FinancialTipCard(tip: FinancialTip, backgroundColor: Color, onClick: () -> U
         }
     }
 }
+
 @Composable
 fun TransactionRow(transaction: Transaction) {
     Row(
