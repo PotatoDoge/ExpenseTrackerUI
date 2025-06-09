@@ -13,13 +13,18 @@ import org.expensetrackerui.presentation.AppBottomNavigationBar
 import org.expensetrackerui.presentation.MainViewModel
 import org.expensetrackerui.presentation.PlaceholderScreen
 import org.expensetrackerui.presentation.addexpense.AddExpenseScreen
+import org.expensetrackerui.presentation.addexpense.AddExpenseViewModel
 import org.expensetrackerui.presentation.home.HomeScreen
 import org.expensetrackerui.presentation.home.HomeViewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.expensetrackerui.util.preview_dummies.DummyBudgetRepository // Import from new location
-import org.expensetrackerui.util.preview_dummies.DummyFinancialTipsRepository // Import from new location
-import org.expensetrackerui.util.preview_dummies.DummySpendingRepository // Import from new location
-import org.expensetrackerui.util.preview_dummies.DummyTransactionRepository // Import from new location
+import org.expensetrackerui.util.preview_dummies.DummyBudgetRepository
+import org.expensetrackerui.util.preview_dummies.DummyFinancialTipsRepository
+import org.expensetrackerui.util.preview_dummies.DummyGetExpenseCategoriesUseCase
+import org.expensetrackerui.util.preview_dummies.DummyGetExpenseTagsUseCase
+import org.expensetrackerui.util.preview_dummies.DummyGetPaymentMethodsUseCase
+import org.expensetrackerui.util.preview_dummies.DummySaveExpenseUseCase
+import org.expensetrackerui.util.preview_dummies.DummySpendingRepository
+import org.expensetrackerui.util.preview_dummies.DummyTransactionRepository
 
 
 @Composable
@@ -32,6 +37,14 @@ fun App(
             spendingRepository = DummySpendingRepository(),
             transactionRepository = DummyTransactionRepository(),
             financialTipsRepository = DummyFinancialTipsRepository()
+        )
+    },
+    addExpenseViewModel: AddExpenseViewModel = remember {
+        AddExpenseViewModel(
+            saveExpenseRepository = DummySaveExpenseUseCase(),
+            getExpenseCategoriesRepository = DummyGetExpenseCategoriesUseCase(),
+            getExpenseTagsRepository = DummyGetExpenseTagsUseCase(),
+            getPaymentMethodsRepository = DummyGetPaymentMethodsUseCase()
         )
     }
 ) {
@@ -52,15 +65,28 @@ fun App(
                     modifier = Modifier.padding(paddingValues),
                     viewModel = homeViewModel
                 )
+
                 AppScreen.AddExpense -> AddExpenseScreen(
                     modifier = Modifier.padding(paddingValues),
                     onClose = {
                         mainViewModel.selectScreen(AppScreen.Home)
                     }
                 )
-                AppScreen.ExpensesList -> PlaceholderScreen("Gastos", modifier = Modifier.padding(paddingValues))
-                AppScreen.Notifications -> PlaceholderScreen("Alertas", modifier = Modifier.padding(paddingValues))
-                AppScreen.Settings -> PlaceholderScreen("Ajustes", modifier = Modifier.padding(paddingValues))
+
+                AppScreen.ExpensesList -> PlaceholderScreen(
+                    "Gastos",
+                    modifier = Modifier.padding(paddingValues)
+                )
+
+                AppScreen.Notifications -> PlaceholderScreen(
+                    "Alertas",
+                    modifier = Modifier.padding(paddingValues)
+                )
+
+                AppScreen.Settings -> PlaceholderScreen(
+                    "Ajustes",
+                    modifier = Modifier.padding(paddingValues)
+                )
             }
         }
     }

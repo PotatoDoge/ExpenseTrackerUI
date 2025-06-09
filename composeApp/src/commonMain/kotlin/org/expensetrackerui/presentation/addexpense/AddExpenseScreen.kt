@@ -61,24 +61,24 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.expensetrackerui.data.model.Currency
 import org.expensetrackerui.data.source.LocalExpenseDataSource
-import org.expensetrackerui.domain.usecase.GetExpenseCategoriesUseCase
-import org.expensetrackerui.domain.usecase.GetExpenseTagsUseCase
-import org.expensetrackerui.domain.usecase.GetPaymentMethodsUseCase
-import org.expensetrackerui.domain.usecase.SaveExpenseUseCase
+import org.expensetrackerui.data.repository.impl.GetExpenseCategoriesRepositoryImpl
+import org.expensetrackerui.data.repository.impl.GetExpenseTagsRepositoryImpl
+import org.expensetrackerui.data.repository.impl.GetPaymentMethodsRepositoryImpl
+import org.expensetrackerui.data.repository.impl.SaveExpenseRepositoryImpl
 
 // Helper function to create the ViewModel (can be done with dependency injection framework)
 @Composable
 fun rememberAddExpenseViewModel(): AddExpenseViewModel {
-    val saveExpenseUseCase = remember { SaveExpenseUseCase(LocalExpenseDataSource()) }
-    val getExpenseCategoriesUseCase = remember { GetExpenseCategoriesUseCase() }
-    val getExpenseTagsUseCase = remember { GetExpenseTagsUseCase() }
-    val getPaymentMethodsUseCase = remember { GetPaymentMethodsUseCase() }
+    val saveExpenseRepositoryImpl = remember { SaveExpenseRepositoryImpl(LocalExpenseDataSource()) }
+    val getExpenseCategoriesRepositoryImpl = remember { GetExpenseCategoriesRepositoryImpl() }
+    val getExpenseTagsRepositoryImpl = remember { GetExpenseTagsRepositoryImpl() }
+    val getPaymentMethodsRepositoryImpl = remember { GetPaymentMethodsRepositoryImpl() }
     return remember {
         AddExpenseViewModel(
-            saveExpenseUseCase,
-            getExpenseCategoriesUseCase,
-            getExpenseTagsUseCase,
-            getPaymentMethodsUseCase
+            saveExpenseRepositoryImpl,
+            getExpenseCategoriesRepositoryImpl,
+            getExpenseTagsRepositoryImpl,
+            getPaymentMethodsRepositoryImpl
         )
     }
 }

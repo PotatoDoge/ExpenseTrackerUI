@@ -10,12 +10,20 @@ import androidx.compose.material.icons.filled.SportsMotorsports
 import androidx.compose.ui.graphics.Color
 import org.expensetrackerui.data.model.BudgetSummary
 import org.expensetrackerui.data.model.CategorySpending
+import org.expensetrackerui.data.model.Expense
+import org.expensetrackerui.data.model.ExpenseCategory
+import org.expensetrackerui.data.model.ExpenseTag
 import org.expensetrackerui.data.model.FinancialTip
+import org.expensetrackerui.data.model.PaymentMethod
 import org.expensetrackerui.data.model.PaymentMethodSpending
 import org.expensetrackerui.data.model.SpendingItem
 import org.expensetrackerui.data.model.Transaction
 import org.expensetrackerui.data.repository.BudgetRepository
 import org.expensetrackerui.data.repository.FinancialTipsRepository
+import org.expensetrackerui.data.repository.GetExpenseCategoriesRepository
+import org.expensetrackerui.data.repository.GetExpenseTagsRepository
+import org.expensetrackerui.data.repository.GetPaymentMethodsRepository
+import org.expensetrackerui.data.repository.SaveExpenseRepository
 import org.expensetrackerui.data.repository.SpendingRepository
 import org.expensetrackerui.data.repository.TransactionRepository
 
@@ -105,4 +113,49 @@ class DummyTransactionRepository : TransactionRepository {
 
 class DummyFinancialTipsRepository : FinancialTipsRepository {
     override fun getFinancialTips(): List<FinancialTip> = sampleFinancialTips
+}
+
+class DummyLocalExpenseDataSource {
+    fun saveExpense(expense: Expense) {
+        println("Dummy: Saving expense: ${expense.name}")
+    }
+}
+
+class DummySaveExpenseUseCase(private val dummyDataSource: DummyLocalExpenseDataSource = DummyLocalExpenseDataSource()) : SaveExpenseRepository {
+    override suspend fun invoke(expense: Expense) {
+        dummyDataSource.saveExpense(expense)
+    }
+}
+
+class DummyGetExpenseCategoriesUseCase : GetExpenseCategoriesRepository {
+    override fun invoke(): List<ExpenseCategory> {
+        return listOf(
+            ExpenseCategory.TRANSPORTATION,
+            ExpenseCategory.OTHER,
+            ExpenseCategory.FOOD,
+            ExpenseCategory.SHOPPING,
+            ExpenseCategory.ENTERTAINMENT
+        )
+    }
+}
+
+class DummyGetExpenseTagsUseCase : GetExpenseTagsRepository {
+    override fun invoke(): List<ExpenseTag> {
+        return listOf(
+            ExpenseTag.URGENT,
+            ExpenseTag.OPTIONAL,
+            ExpenseTag.NECESSARY
+        )
+    }
+}
+
+class DummyGetPaymentMethodsUseCase : GetPaymentMethodsRepository {
+    override fun invoke(): List<PaymentMethod> {
+        return listOf(
+            PaymentMethod.CREDIT_CARD,
+            PaymentMethod.DEBIT_CARD,
+            PaymentMethod.CASH,
+            PaymentMethod.OTHER
+        )
+    }
 }

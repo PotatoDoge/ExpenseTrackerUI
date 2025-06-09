@@ -12,21 +12,22 @@ import org.expensetrackerui.data.model.Expense
 import org.expensetrackerui.data.model.ExpenseCategory
 import org.expensetrackerui.data.model.ExpenseTag
 import org.expensetrackerui.data.model.PaymentMethod
-import org.expensetrackerui.domain.usecase.GetExpenseCategoriesUseCase
-import org.expensetrackerui.domain.usecase.GetExpenseTagsUseCase
-import org.expensetrackerui.domain.usecase.GetPaymentMethodsUseCase
-import org.expensetrackerui.domain.usecase.SaveExpenseUseCase
 import kotlinx.datetime.Clock // For Clock.System
 import kotlinx.datetime.todayIn // This is an extension function, often needs explicit import if not imported by a wildcard
 import org.expensetrackerui.data.model.Currency
+import org.expensetrackerui.data.repository.GetExpenseCategoriesRepository
+import org.expensetrackerui.data.repository.GetExpenseTagsRepository
+import org.expensetrackerui.data.repository.GetPaymentMethodsRepository
+import org.expensetrackerui.data.repository.SaveExpenseRepository
+import org.expensetrackerui.util.preview_dummies.DummyGetPaymentMethodsUseCase
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class AddExpenseViewModel(
-    private val saveExpenseUseCase: SaveExpenseUseCase,
-    private val getExpenseCategoriesUseCase: GetExpenseCategoriesUseCase,
-    private val getExpenseTagsUseCase: GetExpenseTagsUseCase,
-    private val getPaymentMethodsUseCase: GetPaymentMethodsUseCase
+    private val saveExpenseRepository: SaveExpenseRepository,
+    private val getExpenseCategoriesRepository: GetExpenseCategoriesRepository,
+    private val getExpenseTagsRepository: GetExpenseTagsRepository,
+    private val getPaymentMethodsRepository: GetPaymentMethodsRepository
 ) : ViewModel() {
 
     // UI State
@@ -47,9 +48,9 @@ class AddExpenseViewModel(
     var selectedTags by mutableStateOf(emptyList<ExpenseTag>())
         private set
 
-    val categories: List<ExpenseCategory> = getExpenseCategoriesUseCase()
-    val tags: List<ExpenseTag> = getExpenseTagsUseCase()
-    val paymentMethods: List<PaymentMethod> = getPaymentMethodsUseCase()
+    val categories: List<ExpenseCategory> = getExpenseCategoriesRepository.invoke()
+    val tags: List<ExpenseTag> = getExpenseTagsRepository.invoke()
+    val paymentMethods: List<PaymentMethod> = getPaymentMethodsRepository.invoke()
 
     val isSaveButtonEnabled: Boolean
         get() = expenseName.isNotBlank() &&
@@ -122,7 +123,7 @@ class AddExpenseViewModel(
 
         viewModelScope.launch {
             try {
-                saveExpenseUseCase(newExpense)
+                saveExpenseRepository.invoke(newExpense)
                 onSuccess()
             } catch (e: Exception) {
                 onError("Failed to save expense: ${e.message}")

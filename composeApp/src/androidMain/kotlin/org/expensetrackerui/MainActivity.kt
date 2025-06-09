@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import org.expensetrackerui.presentation.MainViewModel
+import org.expensetrackerui.presentation.addexpense.AddExpenseViewModel
 import org.expensetrackerui.presentation.home.HomeViewModel
 import org.koin.android.ext.android.get
 
@@ -15,7 +16,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             val mainViewModel: MainViewModel = get()
             val homeViewModel: HomeViewModel = get()
-            App(mainViewModel = mainViewModel, homeViewModel = homeViewModel)
+            val addExpenseViewModel: AddExpenseViewModel = get()
+            App(mainViewModel = mainViewModel,
+                homeViewModel = homeViewModel,
+                addExpenseViewModel = addExpenseViewModel)
         }
     }
 }

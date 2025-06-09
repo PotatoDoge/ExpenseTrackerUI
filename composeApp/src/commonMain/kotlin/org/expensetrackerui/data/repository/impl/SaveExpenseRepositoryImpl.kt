@@ -1,12 +1,13 @@
-package org.expensetrackerui.domain.usecase
+package org.expensetrackerui.data.repository.impl
 
 import org.expensetrackerui.data.model.Expense
 import org.expensetrackerui.data.repository.ExpenseRepository
+import org.expensetrackerui.data.repository.SaveExpenseRepository
 
-class SaveExpenseUseCase(
+class SaveExpenseRepositoryImpl(
     private val expenseRepository: ExpenseRepository
-) {
-    suspend operator fun invoke(expense: Expense) {
+): SaveExpenseRepository {
+    override suspend fun invoke(expense: Expense) {
         // Here you can add any business rules before saving
         // For example, validation beyond UI input validation
         expenseRepository.saveExpense(expense)
