@@ -8,7 +8,6 @@ data class Expense(
     val amount: Double,
     val currency: Currency,
     val date: LocalDate,
-    val location: String?,
     val paymentMethod: PaymentMethod,
     val category: ExpenseCategory,
     val tags: List<ExpenseTag> = emptyList()
