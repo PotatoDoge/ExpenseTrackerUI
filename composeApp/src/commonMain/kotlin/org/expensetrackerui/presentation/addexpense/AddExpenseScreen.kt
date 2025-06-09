@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,12 +33,9 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -60,117 +58,97 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.expensetrackerui.data.model.Currency
-import org.expensetrackerui.data.source.LocalExpenseDataSource
-import org.expensetrackerui.data.repository.impl.GetExpenseCategoriesRepositoryImpl
-import org.expensetrackerui.data.repository.impl.GetExpenseTagsRepositoryImpl
-import org.expensetrackerui.data.repository.impl.GetPaymentMethodsRepositoryImpl
-import org.expensetrackerui.data.repository.impl.SaveExpenseRepositoryImpl
 
-// Helper function to create the ViewModel (can be done with dependency injection framework)
-@Composable
-fun rememberAddExpenseViewModel(): AddExpenseViewModel {
-    val saveExpenseRepositoryImpl = remember { SaveExpenseRepositoryImpl(LocalExpenseDataSource()) }
-    val getExpenseCategoriesRepositoryImpl = remember { GetExpenseCategoriesRepositoryImpl() }
-    val getExpenseTagsRepositoryImpl = remember { GetExpenseTagsRepositoryImpl() }
-    val getPaymentMethodsRepositoryImpl = remember { GetPaymentMethodsRepositoryImpl() }
-    return remember {
-        AddExpenseViewModel(
-            saveExpenseRepositoryImpl,
-            getExpenseCategoriesRepositoryImpl,
-            getExpenseTagsRepositoryImpl,
-            getPaymentMethodsRepositoryImpl
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddExpenseScreen(
     onClose: () -> Unit,
-    viewModel: AddExpenseViewModel = rememberAddExpenseViewModel(),
+    viewModel: AddExpenseViewModel,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val scrollState = rememberScrollState()
-    val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) }
-    ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .background(Color.White, RoundedCornerShape(16.dp))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp), // Uniform spacing
-            horizontalAlignment = Alignment.CenterHorizontally
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+            .padding(
+                horizontal = 24.dp,
+                vertical = 16.dp
+            ),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         ) {
-            // --- Header ---
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
+            androidx.compose.material3.IconButton(
+                onClick = onClose,
+                modifier = Modifier.align(Alignment.CenterStart)
             ) {
-                IconButton(
-                    onClick = onClose,
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Cerrar"
-                    )
-                }
-                Text(
-                    text = "Nuevo gasto",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.align(Alignment.Center)
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
-                IconButton(
-                    onClick = {
-                        viewModel.clearAllInputs()
-                    },
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Limpiar campos"
-                    )
-                }
             }
-
-            // --- Input Fields ---
-            ExpenseInputField(
-                value = viewModel.expenseName,
-                onValueChange = viewModel::onExpenseNameChanged,
-                placeholder = "Nombre del gasto"
+            Text(
+                text = "Nuevo gasto",
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.align(Alignment.Center)
             )
+            androidx.compose.material3.IconButton(
+                onClick = {
+                    viewModel.clearAllInputs()
+                },
+                modifier = Modifier.align(Alignment.CenterEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Clear fields",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
 
-            ExpenseInputField(
-                value = viewModel.expenseAmount,
-                onValueChange = viewModel::onExpenseAmountChanged,
-                placeholder = "Cantidad",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
+        ExpenseInputField(
+            value = viewModel.expenseName,
+            onValueChange = viewModel::onExpenseNameChanged,
+            placeholder = "Nombre",
+        )
 
+        ExpenseInputField(
+            value = viewModel.expenseAmount,
+            onValueChange = viewModel::onExpenseAmountChanged,
+            placeholder = "Cantidad",
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+
+        // --- Fix for Currency Dropdown ---
+        Box(modifier = Modifier.fillMaxWidth()) { // Wrap in a Box
             var showCurrencyDropdown by remember { mutableStateOf(false) }
             val currencyOptions = Currency.entries.toList()
             ExpenseDropdownField(
                 value = viewModel.selectedCurrency.name,
-                placeholder = "Moneda",
+                placeholder = "Currency",
                 onClick = { showCurrencyDropdown = true }
             )
             DropdownMenu(
                 expanded = showCurrencyDropdown,
                 onDismissRequest = { showCurrencyDropdown = false },
-                modifier = Modifier.fillMaxWidth(0.9f) // Adjust width as needed
+                modifier = Modifier.fillMaxWidth(0.95f)
             ) {
                 currencyOptions.forEach { type ->
                     DropdownMenuItem(
-                        text = { Text(type.name) },
+                        text = { Text(type.name, color = MaterialTheme.colorScheme.onSurface) },
                         onClick = {
                             viewModel.onCurrencySelected(type)
                             showCurrencyDropdown = false
@@ -178,59 +156,50 @@ fun AddExpenseScreen(
                     )
                 }
             }
+        }
 
-
-            // Date Picker
-            var showDatePicker by remember { mutableStateOf(false) }
-            ExpenseDropdownField(
-                value = viewModel.expenseDate.toString(),
-                placeholder = "Fecha",
-                onClick = { showDatePicker = true },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = "Seleccionar fecha"
-                    )
-                }
-            )
-
-            if (showDatePicker) {
-                // This is a basic Material3 DatePicker. You might need to use a custom dialog
-                // or a library for more advanced cross-platform date pickers.
-                val datePickerState = rememberDatePickerState(
-                    initialSelectedDateMillis = viewModel.expenseDate.toEpochDays() * 24L * 60 * 60 * 1000L
+        var showDatePicker by remember { mutableStateOf(false) }
+        ExpenseDropdownField(
+            value = viewModel.expenseDate.toString(),
+            placeholder = "Date",
+            onClick = { showDatePicker = true },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Select date",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                DatePickerDialog(
-                    onDismissRequest = { showDatePicker = false },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                // Convert millis to LocalDate, careful with timezones
-                                viewModel.onExpenseDateChanged(LocalDate.fromEpochDays((millis / (24L * 60 * 60 * 1000L)).toInt()))
-                            }
-                            showDatePicker = false
-                        }) {
-                            Text("OK")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDatePicker = false }) {
-                            Text("Cancelar")
-                        }
-                    }
-                ) {
-                    DatePicker(state = datePickerState)
-                }
             }
+        )
 
-
-            ExpenseInputField(
-                value = viewModel.expenseLocation,
-                onValueChange = viewModel::onExpenseLocationChanged,
-                placeholder = "Lugar (opcional)"
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = viewModel.expenseDate.toEpochDays() * 24L * 60 * 60 * 1000L
             )
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            viewModel.onExpenseDateChanged(LocalDate.fromEpochDays((millis / (24L * 60 * 60 * 1000L)).toInt()))
+                        }
+                        showDatePicker = false
+                    }) {
+                        Text("OK", color = MaterialTheme.colorScheme.primary)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
 
-            // Payment Method Dropdown
+        // --- Fix for Payment Method Dropdown ---
+        Box(modifier = Modifier.fillMaxWidth()) { // Wrap in a Box
             var showPaymentMethodDropdown by remember { mutableStateOf(false) }
             val selectedMethodText =
                 viewModel.selectedPaymentMethod?.name?.replace("_", " ")?.lowercase()
@@ -238,20 +207,22 @@ fun AddExpenseScreen(
 
             ExpenseDropdownField(
                 value = selectedMethodText,
-                placeholder = "Método de pago",
+                placeholder = "Método de Pago",
                 onClick = { showPaymentMethodDropdown = true }
             )
             DropdownMenu(
                 expanded = showPaymentMethodDropdown,
                 onDismissRequest = { showPaymentMethodDropdown = false },
-                modifier = Modifier.fillMaxWidth(0.9f)
+                modifier = Modifier.fillMaxWidth(0.95f)
             ) {
                 viewModel.paymentMethods.forEach { method ->
                     DropdownMenuItem(
                         text = {
                             Text(
                                 method.name.replace("_", " ").lowercase()
-                                    .replaceFirstChar { it.uppercase() })
+                                    .replaceFirstChar { it.uppercase() },
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         },
                         onClick = {
                             viewModel.onPaymentMethodSelected(method)
@@ -260,77 +231,78 @@ fun AddExpenseScreen(
                     )
                 }
             }
+        }
 
-
-            // --- Category Selection ---
-            Text(
-                text = "Categoría",
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth()
-            )
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                viewModel.categories.forEach { category ->
-                    SelectableChip(
-                        text = category.name.lowercase().replaceFirstChar { it.uppercase() },
-                        isSelected = viewModel.selectedCategory == category,
-                        onClick = { viewModel.onCategorySelected(category) }
-                    )
-                }
-            }
-
-            // --- Tags Selection ---
-            Text(
-                text = "Etiquetas",
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth()
-            )
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                viewModel.tags.forEach { tag ->
-                    SelectableChip(
-                        text = tag.name.lowercase().replaceFirstChar { it.uppercase() },
-                        isSelected = viewModel.selectedTags.contains(tag),
-                        onClick = { viewModel.onTagToggled(tag) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // --- Action Button ---
-            Button(
-                onClick = {
-                    viewModel.saveExpense(
-                        onSuccess = {
-                            scope.launch { snackBarHostState.showSnackbar("Gasto guardado exitosamente!") }
-                            onClose()
-                        },
-                        onError = { message ->
-                            scope.launch { snackBarHostState.showSnackbar(message) }
-                        }
-                    )
-                },
-                enabled = viewModel.isSaveButtonEnabled,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp), // Generous height
-                shape = RoundedCornerShape(12.dp),
-                colors = buttonColors(containerColor = Color(0xFF2563EB))
-            ) {
-                Text(
-                    text = "Guardar",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
+        Text(
+            text = "Categoría",
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.fillMaxWidth()
+        )
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            viewModel.categories.forEach { category ->
+                SelectableChip(
+                    text = category.name.lowercase().replaceFirstChar { it.uppercase() },
+                    isSelected = viewModel.selectedCategory == category,
+                    onClick = { viewModel.onCategorySelected(category) }
                 )
             }
+        }
+
+        Text(
+            text = "Etiquetas",
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.fillMaxWidth()
+        )
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            viewModel.tags.forEach { tag ->
+                SelectableChip(
+                    text = tag.name.lowercase().replaceFirstChar { it.uppercase() },
+                    isSelected = viewModel.selectedTags.contains(tag),
+                    onClick = { viewModel.onTagToggled(tag) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                viewModel.saveExpense(
+                    onSuccess = {
+                        scope.launch { snackbarHostState.showSnackbar("Expense saved successfully!") }
+                        onClose()
+                    },
+                    onError = { message ->
+                        scope.launch { snackbarHostState.showSnackbar(message) }
+                    }
+                )
+            },
+            enabled = viewModel.isSaveButtonEnabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Text(
+                text = "Guardar",
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
@@ -345,25 +317,25 @@ fun ExpenseInputField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = Color.Gray) },
+        placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 56.dp), // Uniform height
+            .heightIn(min = 56.dp),
         shape = RoundedCornerShape(12.dp),
         colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFF1F3F5),
-            unfocusedContainerColor = Color(0xFFF1F3F5),
-            disabledContainerColor = Color(0xFFF1F3F5),
-            errorContainerColor = Color(0xFFF1F3F5),
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            errorContainerColor = MaterialTheme.colorScheme.errorContainer,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
             errorIndicatorColor = Color.Transparent,
-            focusedTextColor = Color.Black,
-            unfocusedTextColor = Color.Black
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         ),
         textStyle = LocalTextStyle.current.copy(
-            fontWeight = FontWeight.Light,
+            fontWeight = FontWeight.Normal,
             fontSize = 16.sp
         ),
         keyboardOptions = keyboardOptions,
@@ -381,51 +353,50 @@ fun ExpenseDropdownField(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp) // Fixed height as per description
-            .background(Color(0xFFF1F3F5), RoundedCornerShape(12.dp)) // Light gray background
+            .height(56.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
             .border(
                 1.dp,
                 Color.Transparent,
                 RoundedCornerShape(12.dp)
-            ) // No visible border by default
+            )
             .clickable {
                 onClick()
             },
-        contentAlignment = Alignment.CenterStart // Align content to the start
+        contentAlignment = Alignment.CenterStart
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp), // Standard horizontal padding for text fields
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween // To push trailing icon to end
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             if (leadingIcon != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     leadingIcon()
-                    Spacer(Modifier.width(12.dp)) // Space between icon and text
+                    Spacer(Modifier.width(12.dp))
                 }
             }
 
-            // Display value or placeholder
             if (value.isNotEmpty()) {
                 Text(
                     text = value,
                     style = LocalTextStyle.current.copy(
-                        fontWeight = FontWeight.Light,
+                        fontWeight = FontWeight.Normal,
                         fontSize = 16.sp
                     ),
-                    color = Color.Black,
-                    modifier = Modifier.weight(1f) // Allow text to take available space
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
                 )
             } else {
                 Text(
                     text = placeholder,
                     style = LocalTextStyle.current.copy(
-                        fontWeight = FontWeight.Light,
+                        fontWeight = FontWeight.Normal,
                         fontSize = 16.sp
                     ),
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -433,12 +404,11 @@ fun ExpenseDropdownField(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Dropdown",
-                tint = Color.Gray // Optional: tint the icon
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
-
 
 @Composable
 fun SelectableChip(
@@ -446,15 +416,15 @@ fun SelectableChip(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Surface(
+    androidx.compose.material3.Surface(
         modifier = Modifier.clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
-        color = if (isSelected) Color(0xFF2563EB) else Color(0xFFF1F3F5),
+        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
         shadowElevation = 1.dp
     ) {
         Text(
             text = text,
-            color = if (isSelected) Color.White else Color.Black,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             textAlign = TextAlign.Center,
             fontSize = 14.sp
