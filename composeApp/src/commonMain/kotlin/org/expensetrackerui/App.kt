@@ -70,7 +70,8 @@ fun App(
                     modifier = Modifier.padding(paddingValues),
                     onClose = {
                         mainViewModel.selectScreen(AppScreen.Home)
-                    }
+                    },
+                    viewModel = addExpenseViewModel
                 )
 
                 AppScreen.ExpensesList -> PlaceholderScreen(
