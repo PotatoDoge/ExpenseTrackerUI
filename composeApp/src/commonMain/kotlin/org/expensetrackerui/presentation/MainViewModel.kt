@@ -1,16 +1,27 @@
 package org.expensetrackerui.presentation
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 import org.expensetrackerui.data.model.AppScreen
 
-class MainViewModel : ViewModel() {
-    var currentScreen: AppScreen by mutableStateOf(AppScreen.Home)
-        private set
+
+class MainViewModel {
+    private val viewModelScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val _currentScreen: MutableStateFlow<AppScreen> = MutableStateFlow(AppScreen.Home)
+
+    val currentScreen: StateFlow<AppScreen> = _currentScreen.asStateFlow()
 
     fun selectScreen(screen: AppScreen) {
-        currentScreen = screen
+        _currentScreen.value = screen
+    }
+
+    fun onCleared() {
+        viewModelScope.cancel()
     }
 }

@@ -23,11 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material.icons.filled.LocalMall
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.OtherHouses
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.SportsMotorsports
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -35,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,80 +50,14 @@ import expensetrackerui.composeapp.generated.resources.fondo_4
 import expensetrackerui.composeapp.generated.resources.fondo_5
 import expensetrackerui.composeapp.generated.resources.fondo_6
 import expensetrackerui.composeapp.generated.resources.profile_pic
-import expensetrackerui.composeapp.generated.resources.tip_ahorro
-import expensetrackerui.composeapp.generated.resources.tip_gastos
-import expensetrackerui.composeapp.generated.resources.tip_inversion
-import expensetrackerui.composeapp.generated.resources.tip_presupuesto
 import org.expensetrackerui.data.model.BudgetSummary
-import org.expensetrackerui.data.model.CategorySpending
 import org.expensetrackerui.data.model.FinancialTip
-import org.expensetrackerui.data.model.PaymentMethodSpending
 import org.expensetrackerui.data.model.SpendingItem
 import org.expensetrackerui.data.model.Transaction
 import org.expensetrackerui.util.CurrencyFormatter
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-
-val sampleBudget = BudgetSummary(totalSpent = 1523.56, totalIncome = 1523.00)
-val samplePaymentMethodsSpending = listOf(
-    PaymentMethodSpending("Banamex Oro", 500.00, 1534.56),
-    PaymentMethodSpending("BBVA Azul", 400.00, 1534.56),
-    PaymentMethodSpending("Banamex Débito (priority)", 334.56, 1534.56),
-    PaymentMethodSpending("Efectivo", 300.00, 1534.56),
-    PaymentMethodSpending("Otro", 0.0, 1534.56)
-)
-
-val paymentMethodColors = listOf(
-    Color(0xFF57B8FF),
-    Color(0xFF81B29A),
-    Color(0xFF7B506F),
-    Color(0xFFE07A5F),
-    Color(0xFF8B008B),
-    Color(0xFFECD444)
-)
-
-val mappedPaymentMethodsSpending = samplePaymentMethodsSpending.mapIndexed { index, method ->
-    SpendingItem(
-        name = method.name,
-        amount = method.amount,
-        totalMonthSpending = method.totalMonthSpending,
-        color = paymentMethodColors.getOrElse(index) { Color.Gray }
-    )
-}
-
-val sampleCategoriesSpending = listOf(
-    CategorySpending("Comida", 450.00, Icons.Default.Fastfood, 1534.56),
-    CategorySpending("Compras", 300.00, Icons.Default.ShoppingCart, 1534.56),
-    CategorySpending("Transporte", 200.00, Icons.Default.SportsMotorsports, 1534.56),
-    CategorySpending("Entretenimiento", 150.00, Icons.Default.Movie, 1534.56),
-    CategorySpending("Otros", 134.56, Icons.Default.OtherHouses, 1534.56)
-)
-
-val categoryColors = listOf(
-    Color(0xFFFB4B4E),
-    Color(0xFFFFAD05),
-    Color(0xFFF4BFDB),
-    Color(0xFF7B506F),
-    Color(0xFFA5E6BA),
-    Color(0xFF9AC6C5)
-)
-
-val mappedCategoriesSpending = sampleCategoriesSpending.mapIndexed { index, category ->
-    SpendingItem(
-        name = category.name,
-        amount = category.amount,
-        totalMonthSpending = category.totalMonthSpending,
-        color = categoryColors.getOrElse(index) { Color.Gray }
-    )
-}
-
-val sampleRecentTransactions = listOf(
-    Transaction(Icons.Default.ShoppingCart, "Supermercado XYZ", "Abarrotes", 50.00),
-    Transaction(Icons.Default.LocalMall, "Tienda de Ropa Z", "Vestimenta", -120.00),
-    Transaction(Icons.Default.SportsMotorsports, "Gasolinera Pemex", "Transporte", -35.00),
-    Transaction(Icons.Default.Movie, "Cinepolis", "Entretenimiento", -25.00),
-    Transaction(Icons.Default.Fastfood, "Restaurante ABC", "Comida Fuera", -40.00)
-)
+import androidx.compose.runtime.collectAsState
 
 val tipBackgroundColors = listOf(
     Color(0xFFE0F7FA),
@@ -136,17 +66,25 @@ val tipBackgroundColors = listOf(
     Color(0xFFFFFDE7)
 )
 
-val sampleFinancialTips = listOf(
-    FinancialTip("Ahorra a tiempo", "Consejos para el supermercado.", Res.drawable.tip_ahorro),
-    FinancialTip("Haz un presupuesto", "Guía paso a paso.", Res.drawable.tip_presupuesto),
-    FinancialTip("Invierte Inteligente", "Primeros pasos.", Res.drawable.tip_inversion),
-    FinancialTip("Reduce Gastos", "Identifica fugas de dinero.", Res.drawable.tip_gastos)
-)
-
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel
 ) {
+
+    DisposableEffect(viewModel) {
+        viewModel.initialize()
+        onDispose {
+            viewModel.onCleared()
+        }
+    }
+
+    val budget = viewModel.budgetSummary.collectAsState().value
+    val paymentMethodSpending = viewModel.paymentMethodSpending.collectAsState().value
+    val categorySpending = viewModel.categorySpending.collectAsState().value
+    val recentTransactions = viewModel.recentTransactions.collectAsState().value
+    val financialTips = viewModel.financialTips.collectAsState().value
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -225,21 +163,21 @@ fun HomeScreen(
             color = Color(0XFF5e5b5b),
             modifier = Modifier.padding(bottom = 12.dp)
         )
-        BudgetCard(sampleBudget)
+        BudgetCard(budget)
         Spacer(Modifier.height(24.dp))
 
         SpendingSection(
             title = "Gastos por método de pago",
-            totalAmount = sampleBudget.totalSpent,
-            items = mappedPaymentMethodsSpending,
+            totalAmount = budget.totalSpent,
+            items = paymentMethodSpending,
             showTotalBar = true
         )
         Spacer(Modifier.height(24.dp))
 
         SpendingSection(
             title = "Gastos por categoría",
-            totalAmount = sampleBudget.totalSpent,
-            items = mappedCategoriesSpending,
+            totalAmount = budget.totalSpent,
+            items = categorySpending,
             showTotalBar = true
         )
         Spacer(Modifier.height(24.dp))
@@ -260,7 +198,7 @@ fun HomeScreen(
                 .padding(horizontal = 0.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            sampleFinancialTips.forEachIndexed { index, tip ->
+            financialTips.forEachIndexed { index, tip ->
                 val backgroundColor =
                     tipBackgroundColors.getOrElse(index % tipBackgroundColors.size) { Color.LightGray }
                 FinancialTipCard(tip = tip, backgroundColor = backgroundColor) {
@@ -282,9 +220,9 @@ fun HomeScreen(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            sampleRecentTransactions.forEachIndexed { index, transaction ->
+            recentTransactions.forEachIndexed { index, transaction ->
                 TransactionRow(transaction)
-                if (index < sampleRecentTransactions.lastIndex) {
+                if (index < recentTransactions.lastIndex) {
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 8.dp),
                         thickness = 0.5.dp,
