@@ -39,8 +39,6 @@ class AddExpenseViewModel(
         private set
     var expenseDate by mutableStateOf(Clock.System.todayIn(TimeZone.currentSystemDefault()))
         private set
-    var expenseLocation by mutableStateOf("")
-        private set
     var selectedPaymentMethod by mutableStateOf<PaymentMethod?>(null)
         private set
     var selectedCategory by mutableStateOf<ExpenseCategory?>(null)
@@ -70,10 +68,6 @@ class AddExpenseViewModel(
 
     fun onExpenseDateChanged(date: LocalDate) {
         expenseDate = date
-    }
-
-    fun onExpenseLocationChanged(location: String) {
-        expenseLocation = location
     }
 
     fun onPaymentMethodSelected(method: PaymentMethod) {
@@ -115,7 +109,6 @@ class AddExpenseViewModel(
             amount = amountDouble,
             currency = selectedCurrency, // Using a default type for now
             date = expenseDate,
-            location = expenseLocation.takeIf { it.isNotBlank() },
             paymentMethod = selectedPaymentMethod ?: PaymentMethod.OTHER, // Default if not selected
             category = selectedCategory!!, // Guaranteed to be non-null by validation
             tags = selectedTags
@@ -136,7 +129,6 @@ class AddExpenseViewModel(
         expenseAmount = ""
         selectedCurrency = Currency.MXN
         expenseDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        expenseLocation = ""
         selectedPaymentMethod = null // Clear selection
         selectedCategory = null // Clear selection
         selectedTags = emptyList() // Clear selection
