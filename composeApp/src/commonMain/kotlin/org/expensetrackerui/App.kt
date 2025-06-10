@@ -16,8 +16,10 @@ import org.expensetrackerui.presentation.addexpense.AddExpenseScreen
 import org.expensetrackerui.presentation.addexpense.AddExpenseViewModel
 import org.expensetrackerui.presentation.home.HomeScreen
 import org.expensetrackerui.presentation.home.HomeViewModel
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.expensetrackerui.presentation.showexpenses.ShowAllExpensesScreen
+import org.expensetrackerui.presentation.showexpenses.ShowExpensesViewModel
 import org.expensetrackerui.util.preview_dummies.DummyBudgetRepository
+import org.expensetrackerui.util.preview_dummies.DummyExpenseRepository
 import org.expensetrackerui.util.preview_dummies.DummyFinancialTipsRepository
 import org.expensetrackerui.util.preview_dummies.DummyGetExpenseCategoriesUseCase
 import org.expensetrackerui.util.preview_dummies.DummyGetExpenseTagsUseCase
@@ -28,7 +30,6 @@ import org.expensetrackerui.util.preview_dummies.DummyTransactionRepository
 
 
 @Composable
-@Preview
 fun App(
     mainViewModel: MainViewModel = remember { MainViewModel() },
     homeViewModel: HomeViewModel = remember {
@@ -45,6 +46,11 @@ fun App(
             getExpenseCategoriesRepository = DummyGetExpenseCategoriesUseCase(),
             getExpenseTagsRepository = DummyGetExpenseTagsUseCase(),
             getPaymentMethodsRepository = DummyGetPaymentMethodsUseCase()
+        )
+    },
+    showExpensesViewModel: ShowExpensesViewModel = remember {
+        ShowExpensesViewModel(
+            expenseRepository = DummyExpenseRepository()
         )
     }
 ) {
@@ -74,10 +80,9 @@ fun App(
                     viewModel = addExpenseViewModel
                 )
 
-                AppScreen.ExpensesList -> PlaceholderScreen(
-                    "Gastos",
-                    modifier = Modifier.padding(paddingValues)
-                )
+                AppScreen.ExpensesList -> ShowAllExpensesScreen(
+                    modifier = Modifier.padding(paddingValues),
+                    viewModel = showExpensesViewModel)
 
                 AppScreen.Categories -> PlaceholderScreen(
                     "Categorías",

@@ -21,6 +21,8 @@ import org.expensetrackerui.data.repository.impl.SaveExpenseRepositoryImpl
 import org.expensetrackerui.presentation.MainViewModel
 import org.expensetrackerui.presentation.addexpense.AddExpenseViewModel
 import org.expensetrackerui.presentation.home.HomeViewModel
+import org.expensetrackerui.presentation.showexpenses.ShowExpensesViewModel
+import org.expensetrackerui.util.preview_dummies.DummyExpenseRepository
 import org.koin.dsl.module
 
 val appModule = module {
@@ -30,7 +32,7 @@ val appModule = module {
     single<TransactionRepository> { TransactionRepositoryImpl() }
 
     single { LocalExpenseDataSource() }
-    single<ExpenseRepository> { get<LocalExpenseDataSource>() }
+    single<ExpenseRepository> { DummyExpenseRepository() }
 
     single<SaveExpenseRepository> { SaveExpenseRepositoryImpl(get()) }
     single<GetExpenseCategoriesRepository> { GetExpenseCategoriesRepositoryImpl() }
@@ -56,6 +58,12 @@ val appModule = module {
             getExpenseCategoriesRepository = get(),
             getExpenseTagsRepository = get(),
             getPaymentMethodsRepository = get()
+        )
+    }
+
+    factory {
+        ShowExpensesViewModel(
+            expenseRepository = get()
         )
     }
 }
