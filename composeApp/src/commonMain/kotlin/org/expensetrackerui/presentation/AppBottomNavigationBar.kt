@@ -15,7 +15,7 @@ fun AppBottomNavigationBar(
         AppScreen.Home,
         AppScreen.AddExpense,
         AppScreen.ExpensesList,
-        AppScreen.Notifications,
+        AppScreen.Categories,
         AppScreen.Settings
     )
 

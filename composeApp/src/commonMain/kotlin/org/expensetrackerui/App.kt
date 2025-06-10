@@ -79,8 +79,8 @@ fun App(
                     modifier = Modifier.padding(paddingValues)
                 )
 
-                AppScreen.Notifications -> PlaceholderScreen(
-                    "Alertas",
+                AppScreen.Categories -> PlaceholderScreen(
+                    "Categorías",
                     modifier = Modifier.padding(paddingValues)
                 )
 
