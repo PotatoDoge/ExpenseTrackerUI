@@ -67,7 +67,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.expensetrackerui.data.model.Currency
-import org.expensetrackerui.data.model.TagWithColor // Importar la nueva clase de datos
+import org.expensetrackerui.data.model.TagWithColor
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.luminance
 
