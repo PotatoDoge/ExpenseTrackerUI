@@ -130,11 +130,10 @@ class DummySaveExpenseUseCase(private val dummyDataSource: DummyLocalExpenseData
 class DummyGetExpenseCategoriesUseCase : GetExpenseCategoriesRepository {
     override fun invoke(): List<ExpenseCategory> {
         return listOf(
-            ExpenseCategory.TRANSPORTATION,
-            ExpenseCategory.OTHER,
-            ExpenseCategory.FOOD,
-            ExpenseCategory.SHOPPING,
-            ExpenseCategory.ENTERTAINMENT
+            ExpenseCategory.NECESIDAD,
+            ExpenseCategory.GASTO_NO_PLANEADO,
+            ExpenseCategory.GUSTO,
+            ExpenseCategory.DEUDA
         )
     }
 }
@@ -152,9 +151,14 @@ class DummyGetExpenseTagsUseCase : GetExpenseTagsRepository {
 class DummyGetPaymentMethodsUseCase : GetPaymentMethodsRepository {
     override fun invoke(): List<PaymentMethod> {
         return listOf(
-            PaymentMethod.CREDIT_CARD,
-            PaymentMethod.DEBIT_CARD,
-            PaymentMethod.CASH,
+            PaymentMethod.BANAMEX_ORO,
+            PaymentMethod.BANAMEX_AZUL,
+            PaymentMethod.VALES_DE_DESPENSA,
+            PaymentMethod.HEY_BANCO,
+            PaymentMethod.NU_CREDITO,
+            PaymentMethod.NU_DEBITO,
+            PaymentMethod.EFECTIVO,
+            PaymentMethod.BANAMEX_DEBITO,
             PaymentMethod.OTHER
         )
     }

@@ -18,11 +18,12 @@ enum class Currency {
 }
 
 enum class PaymentMethod {
-    CREDIT_CARD, DEBIT_CARD, CASH, TRANSFER, OTHER // Example payment methods
+   BANAMEX_ORO, BANAMEX_AZUL, VALES_DE_DESPENSA, HEY_BANCO, NU_CREDITO,
+    NU_DEBITO, EFECTIVO, BANAMEX_DEBITO, OTHER
 }
 
 enum class ExpenseCategory {
-    FOOD, TRANSPORTATION, ENTERTAINMENT, SHOPPING, OTHER // Your defined categories
+    NECESIDAD, GASTO_NO_PLANEADO, GUSTO, DEUDA
 }
 
 enum class ExpenseTag {
