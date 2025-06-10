@@ -146,7 +146,7 @@ fun AddExpenseScreen(
         ExpenseInputField(
             value = viewModel.expenseAmount,
             onValueChange = viewModel::onExpenseAmountChanged,
-            placeholder = "Cantidad",
+            placeholder = "Cantidad ($)",
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
