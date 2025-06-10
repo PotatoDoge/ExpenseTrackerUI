@@ -8,8 +8,19 @@ import androidx.compose.material.icons.filled.OtherHouses
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.SportsMotorsports
 import androidx.compose.ui.graphics.Color
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.daysUntil
 import org.expensetrackerui.data.model.BudgetSummary
 import org.expensetrackerui.data.model.CategorySpending
+import org.expensetrackerui.data.model.Currency
 import org.expensetrackerui.data.model.Expense
 import org.expensetrackerui.data.model.ExpenseCategory
 import org.expensetrackerui.data.model.ExpenseTag
@@ -17,8 +28,10 @@ import org.expensetrackerui.data.model.FinancialTip
 import org.expensetrackerui.data.model.PaymentMethod
 import org.expensetrackerui.data.model.PaymentMethodSpending
 import org.expensetrackerui.data.model.SpendingItem
+import org.expensetrackerui.data.model.TagWithColor
 import org.expensetrackerui.data.model.Transaction
 import org.expensetrackerui.data.repository.BudgetRepository
+import org.expensetrackerui.data.repository.ExpenseRepository
 import org.expensetrackerui.data.repository.FinancialTipsRepository
 import org.expensetrackerui.data.repository.GetExpenseCategoriesRepository
 import org.expensetrackerui.data.repository.GetExpenseTagsRepository
@@ -26,6 +39,8 @@ import org.expensetrackerui.data.repository.GetPaymentMethodsRepository
 import org.expensetrackerui.data.repository.SaveExpenseRepository
 import org.expensetrackerui.data.repository.SpendingRepository
 import org.expensetrackerui.data.repository.TransactionRepository
+import kotlin.random.Random
+import kotlinx.datetime.Clock as KtxClock
 
 val sampleBudget = BudgetSummary(totalSpent = 1523.56, totalIncome = 1523.00)
 
@@ -161,5 +176,80 @@ class DummyGetPaymentMethodsUseCase : GetPaymentMethodsRepository {
             PaymentMethod.BANAMEX_DEBITO,
             PaymentMethod.OTRO
         )
+    }
+}
+
+val allExpenseCategories = ExpenseCategory.entries // Get all enum values
+val allPaymentMethods = PaymentMethod.entries // Get all enum values
+val allExpenseTags = ExpenseTag.entries // Get all enum values
+
+val commonExpenseNames = listOf(
+    "Café", "Alquiler", "Electricidad", "Agua", "Gas", "Internet",
+    "Comestibles", "Cena fuera", "Transporte público", "Gasolina",
+    "Ropa", "Entretenimiento", "Gimnasio", "Farmacia", "Médico",
+    "Reparación coche", "Regalo", "Libros", "Música", "Software"
+)
+
+val randomTagColorsList = listOf(
+    Color(0xFFE0BBE4), // Pastel purple
+    Color(0xFF957DAD), // Medium purple
+    Color(0xFFD291BC), // Light pink
+    Color(0xFFFEC8D8), // Light rose
+    Color(0xFFFFDFD3), // Peach
+    Color(0xFFCCE2CB), // Light green
+    Color(0xFFDAF7A6), // Pale green
+    Color(0xFFB5EAD7), // Mint green
+    Color(0xFFC7CEEA)  // Light blue
+)
+
+fun generateRandomDate(): LocalDate {
+    val today = KtxClock.System.todayIn(TimeZone.currentSystemDefault())
+    val sixMonthsAgo = today.minus(6, DateTimeUnit.MONTH)
+    val diffDays = sixMonthsAgo.daysUntil(today).toLong()
+
+    if (diffDays <= 0) {
+        return sixMonthsAgo
+    }
+
+    val randomDays = Random.nextLong(0, diffDays)
+
+    return sixMonthsAgo.plus(randomDays.toInt(), DateTimeUnit.DAY)
+}
+
+val sampleAllExpenses: List<Expense> = (1..100).map { id ->
+    val randomName = commonExpenseNames.random()
+    val randomAmount = Random.nextDouble(5.0, 500.0) // Random amount between 5 and 500
+    val randomCategory = allExpenseCategories.random()
+    val randomPaymentMethod = allPaymentMethods.random()
+    val randomDate = generateRandomDate()
+    val randomTags = (0..Random.nextInt(allExpenseTags.size)).map { // 0 to max tags
+        val tag = allExpenseTags.random()
+        val color = randomTagColorsList.random()
+        TagWithColor(tag.name, color)
+    }.distinct() // Ensure unique tags
+
+    Expense(
+        id = id.toString(),
+        name = randomName,
+        amount = randomAmount*-1,
+        currency = Currency.MXN,
+        date = randomDate,
+        paymentMethod = randomPaymentMethod,
+        category = randomCategory,
+        tags = randomTags
+    )
+}
+
+class DummyExpenseRepository : ExpenseRepository {
+
+    private val _expenses = MutableStateFlow(sampleAllExpenses)
+
+    override fun getExpenses(): Flow<List<Expense>> {
+        return _expenses.asStateFlow()
+    }
+
+    override suspend fun saveExpense(expense: Expense) {
+        _expenses.value += expense
+        println("DummyExpenseRepository: Saved expense: ${expense.name}. Total expenses: ${_expenses.value.size}")
     }
 }
