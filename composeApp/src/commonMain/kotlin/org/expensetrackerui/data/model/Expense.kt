@@ -19,7 +19,7 @@ enum class Currency {
 
 enum class PaymentMethod {
    BANAMEX_ORO, BANAMEX_AZUL, VALES_DE_DESPENSA, HEY_BANCO, NU_CREDITO,
-    NU_DEBITO, EFECTIVO, BANAMEX_DEBITO, OTHER
+    NU_DEBITO, EFECTIVO, BANAMEX_DEBITO, OTRO
 }
 
 enum class ExpenseCategory {

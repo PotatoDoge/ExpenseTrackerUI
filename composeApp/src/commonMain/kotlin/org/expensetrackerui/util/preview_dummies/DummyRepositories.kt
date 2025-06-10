@@ -159,7 +159,7 @@ class DummyGetPaymentMethodsUseCase : GetPaymentMethodsRepository {
             PaymentMethod.NU_DEBITO,
             PaymentMethod.EFECTIVO,
             PaymentMethod.BANAMEX_DEBITO,
-            PaymentMethod.OTHER
+            PaymentMethod.OTRO
         )
     }
 }

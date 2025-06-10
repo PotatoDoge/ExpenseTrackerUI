@@ -134,7 +134,7 @@ class AddExpenseViewModel(
             amount = amountDouble,
             currency = selectedCurrency,
             date = expenseDate,
-            paymentMethod = selectedPaymentMethod ?: PaymentMethod.OTHER,
+            paymentMethod = selectedPaymentMethod ?: PaymentMethod.OTRO,
             category = selectedCategory!!,
             tags = selectedTags
         )
