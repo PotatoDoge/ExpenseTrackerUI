@@ -1,5 +1,11 @@
 package org.expensetrackerui.data.model
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.Paid
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.datetime.LocalDate
 
 data class Expense(
@@ -10,8 +16,24 @@ data class Expense(
     val date: LocalDate,
     val paymentMethod: PaymentMethod,
     val category: ExpenseCategory,
-    val tags: List<ExpenseTag> = emptyList()
-)
+    val tags: List<TagWithColor> = emptyList()
+) {
+    fun toTransactionForDisplay(): Transaction {
+        val transactionIcon: ImageVector = when (this.category) {
+            ExpenseCategory.NECESIDAD -> Icons.Default.ShoppingCart // Groceries, essential items
+            ExpenseCategory.GASTO_NO_PLANEADO -> Icons.Default.LocalHospital // Unexpected medical, repairs
+            ExpenseCategory.GUSTO -> Icons.Default.Fastfood // Dining out, entertainment
+            ExpenseCategory.DEUDA -> Icons.Default.Paid // Debt payments
+        }
+
+        return Transaction(
+            icon = transactionIcon,
+            storeName = this.name,
+            category = this.category.name,
+            amount = this.amount
+        )
+    }
+}
 
 enum class Currency {
     USD, MXN, CAD // Example types
