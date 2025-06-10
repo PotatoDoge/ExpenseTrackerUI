@@ -22,6 +22,7 @@ import androidx.core.view.WindowCompat
 import org.expensetrackerui.presentation.MainViewModel
 import org.expensetrackerui.presentation.addexpense.AddExpenseViewModel
 import org.expensetrackerui.presentation.home.HomeViewModel
+import org.expensetrackerui.presentation.showexpenses.ShowExpensesViewModel
 import org.expensetrackerui.theme.CustomDarkColorScheme
 import org.expensetrackerui.theme.CustomLightColorScheme
 import org.expensetrackerui.theme.ExpenseTrackerUITheme
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
             val mainViewModel: MainViewModel = get()
             val homeViewModel: HomeViewModel = get()
             val addExpenseViewModel: AddExpenseViewModel = get()
+            val showExpensesViewModel: ShowExpensesViewModel = get()
 
             val darkTheme = isSystemInDarkTheme()
 
@@ -72,7 +74,8 @@ class MainActivity : ComponentActivity() {
                             App(
                                 mainViewModel = mainViewModel,
                                 homeViewModel = homeViewModel,
-                                addExpenseViewModel = addExpenseViewModel
+                                addExpenseViewModel = addExpenseViewModel,
+                                showExpensesViewModel = showExpensesViewModel
                             )
                         }
                     }
