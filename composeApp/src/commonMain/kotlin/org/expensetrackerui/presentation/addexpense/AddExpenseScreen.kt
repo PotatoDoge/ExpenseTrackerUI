@@ -260,7 +260,7 @@ fun AddExpenseScreen(
         ) {
             viewModel.categories.forEach { category ->
                 SelectableChip(
-                    text = category.name.lowercase().replaceFirstChar { it.uppercase() },
+                    text = category.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
                     isSelected = viewModel.selectedCategory == category,
                     onClick = { viewModel.onCategorySelected(category) }
                 )
