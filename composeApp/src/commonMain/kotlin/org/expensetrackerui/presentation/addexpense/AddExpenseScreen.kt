@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow // Para el selector de color
-import androidx.compose.foundation.lazy.items // Para el selector de color
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape // Para los selectores de color
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,7 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check // Para indicar color seleccionado
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
@@ -70,6 +70,7 @@ import org.expensetrackerui.data.model.Currency
 import org.expensetrackerui.data.model.TagWithColor
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -82,9 +83,10 @@ fun AddExpenseScreen(
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
+    val keyboardController = LocalSoftwareKeyboardController.current
     val tagInput by viewModel.tagInput.collectAsState()
     val currentTags by viewModel.currentTags.collectAsState()
-    val selectedTagColor by viewModel.selectedTagColor.collectAsState() // Nuevo: Color seleccionado
+    val selectedTagColor by viewModel.selectedTagColor.collectAsState()
 
     Column(
         modifier = modifier
@@ -274,7 +276,6 @@ fun AddExpenseScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Selector de color para las etiquetas
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -314,17 +315,19 @@ fun AddExpenseScreen(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    viewModel.addTag(tagInput, selectedTagColor) { errorMessage -> // Pasa el color aquí
+                    viewModel.addTag(tagInput, selectedTagColor) { errorMessage ->
                         scope.launch { snackbarHostState.showSnackbar(errorMessage) }
                     }
+                    keyboardController?.hide()
                 }
             ),
             trailingIcon = {
                 androidx.compose.material3.IconButton(
                     onClick = {
-                        viewModel.addTag(tagInput, selectedTagColor) { errorMessage -> // Pasa el color aquí
+                        viewModel.addTag(tagInput, selectedTagColor) { errorMessage ->
                             scope.launch { snackbarHostState.showSnackbar(errorMessage) }
                         }
+                        keyboardController?.hide()
                     }
                 ) {
                     Icon(
@@ -343,10 +346,10 @@ fun AddExpenseScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                currentTags.forEach { tagWithColor -> // Iterar sobre TagWithColor
+                currentTags.forEach { tagWithColor ->
                     RemovableTagChip(
-                        tagWithColor = tagWithColor, // Pasar el objeto completo
-                        onRemove = { viewModel.removeTag(tagWithColor.name) } // Eliminar por nombre
+                        tagWithColor = tagWithColor,
+                        onRemove = { viewModel.removeTag(tagWithColor.name) }
                     )
                 }
             }
@@ -385,8 +388,6 @@ fun AddExpenseScreen(
         }
     }
 }
-
-// Reusable Composables (ExpenseInputField, ExpenseDropdownField, SelectableChip) remain the same
 
 @Composable
 fun ExpenseInputField(
@@ -515,13 +516,13 @@ fun SelectableChip(
 
 @Composable
 fun RemovableTagChip(
-    tagWithColor: TagWithColor, // Ahora recibe un objeto TagWithColor
+    tagWithColor: TagWithColor,
     onRemove: (String) -> Unit
 ) {
     androidx.compose.material3.Surface(
         modifier = Modifier,
         shape = RoundedCornerShape(8.dp),
-        color = tagWithColor.color, // Usar el color de la etiqueta
+        color = tagWithColor.color,
         shadowElevation = 1.dp
     ) {
         Row(
@@ -531,7 +532,6 @@ fun RemovableTagChip(
         ) {
             Text(
                 text = tagWithColor.name,
-                // Calcular un color de texto contrastante
                 color = if (tagWithColor.color.luminance() > 0.5f) Color.Black else Color.White,
                 fontSize = 14.sp
             )
@@ -541,7 +541,6 @@ fun RemovableTagChip(
                 modifier = Modifier
                     .size(16.dp)
                     .clickable { onRemove(tagWithColor.name) },
-                // Calcular un color de ícono contrastante
                 tint = if (tagWithColor.color.luminance() > 0.5f) Color.Black.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.7f)
             )
         }
@@ -556,7 +555,7 @@ fun ColorOption(
 ) {
     Box(
         modifier = Modifier
-            .size(32.dp) // Tamaño del círculo de color
+            .size(32.dp)
             .clip(CircleShape)
             .background(color)
             .border(
@@ -571,7 +570,7 @@ fun ColorOption(
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Color seleccionado",
-                tint = if (color.luminance() > 0.5f) Color.Black else Color.White, // Color del check
+                tint = if (color.luminance() > 0.5f) Color.Black else Color.White,
                 modifier = Modifier.size(20.dp)
             )
         }
