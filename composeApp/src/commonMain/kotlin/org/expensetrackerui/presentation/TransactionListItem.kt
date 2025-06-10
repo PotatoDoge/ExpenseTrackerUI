@@ -59,7 +59,7 @@ fun TransactionListItem(transaction: Transaction) {
                     color = Color.Black
                 )
                 Text(
-                    text = transaction.category.replace("_", " "),
+                    text = transaction.category.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
