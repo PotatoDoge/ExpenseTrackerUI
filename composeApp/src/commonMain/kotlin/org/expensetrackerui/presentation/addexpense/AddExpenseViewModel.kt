@@ -3,8 +3,12 @@ package org.expensetrackerui.presentation.addexpense
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -12,14 +16,14 @@ import org.expensetrackerui.data.model.Expense
 import org.expensetrackerui.data.model.ExpenseCategory
 import org.expensetrackerui.data.model.ExpenseTag
 import org.expensetrackerui.data.model.PaymentMethod
-import kotlinx.datetime.Clock // For Clock.System
-import kotlinx.datetime.todayIn // This is an extension function, often needs explicit import if not imported by a wildcard
+import kotlinx.datetime.Clock
+import kotlinx.datetime.todayIn
 import org.expensetrackerui.data.model.Currency
+import org.expensetrackerui.data.model.TagWithColor
 import org.expensetrackerui.data.repository.GetExpenseCategoriesRepository
 import org.expensetrackerui.data.repository.GetExpenseTagsRepository
 import org.expensetrackerui.data.repository.GetPaymentMethodsRepository
 import org.expensetrackerui.data.repository.SaveExpenseRepository
-import org.expensetrackerui.util.preview_dummies.DummyGetPaymentMethodsUseCase
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -30,7 +34,6 @@ class AddExpenseViewModel(
     private val getPaymentMethodsRepository: GetPaymentMethodsRepository
 ) : ViewModel() {
 
-    // UI State
     var expenseName by mutableStateOf("")
         private set
     var expenseAmount by mutableStateOf("")
@@ -46,6 +49,16 @@ class AddExpenseViewModel(
     var selectedTags by mutableStateOf(emptyList<ExpenseTag>())
         private set
 
+    private val _tagInput = MutableStateFlow("")
+    val tagInput: StateFlow<String> = _tagInput.asStateFlow()
+
+    // Now stores TagWithColor objects
+    private val _currentTags = MutableStateFlow<List<TagWithColor>>(emptyList())
+    val currentTags: StateFlow<List<TagWithColor>> = _currentTags.asStateFlow()
+
+    private val _selectedTagColor = MutableStateFlow(SuggestedTagColors.colors.first())
+    val selectedTagColor: StateFlow<Color> = _selectedTagColor.asStateFlow()
+
     val categories: List<ExpenseCategory> = getExpenseCategoriesRepository.invoke()
     val tags: List<ExpenseTag> = getExpenseTagsRepository.invoke()
     val paymentMethods: List<PaymentMethod> = getPaymentMethodsRepository.invoke()
@@ -60,7 +73,6 @@ class AddExpenseViewModel(
     }
 
     fun onExpenseAmountChanged(amount: String) {
-        // Basic validation for numeric input
         if (amount.isEmpty() || amount.matches(Regex("^\\d*\\.?\\d*\$"))) {
             expenseAmount = amount
         }
@@ -82,12 +94,25 @@ class AddExpenseViewModel(
         selectedCategory = category
     }
 
-    fun onTagToggled(tag: ExpenseTag) {
-        selectedTags = if (selectedTags.contains(tag)) {
-            selectedTags - tag
-        } else {
-            selectedTags + tag
+    fun addTag(tag: String, color: Color, onError: (String) -> Unit) {
+        val trimmedTag = tag.trim()
+
+        if (trimmedTag.isBlank()) {
+            onError("La etiqueta no puede estar vacía.")
+            return
         }
+        if (trimmedTag.length > 20) {
+            onError("La etiqueta no puede exceder los 20 caracteres.")
+            return
+        }
+        val lowerCaseTag = trimmedTag.lowercase()
+        if (_currentTags.value.any { it.name.lowercase() == lowerCaseTag }) {
+            onError("La etiqueta '$trimmedTag' ya existe.")
+            return
+        }
+
+        _currentTags.value = _currentTags.value + TagWithColor(trimmedTag, color)
+        _tagInput.value = ""
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -107,10 +132,10 @@ class AddExpenseViewModel(
             id = id,
             name = expenseName,
             amount = amountDouble,
-            currency = selectedCurrency, // Using a default type for now
+            currency = selectedCurrency,
             date = expenseDate,
-            paymentMethod = selectedPaymentMethod ?: PaymentMethod.OTHER, // Default if not selected
-            category = selectedCategory!!, // Guaranteed to be non-null by validation
+            paymentMethod = selectedPaymentMethod ?: PaymentMethod.OTHER,
+            category = selectedCategory!!,
             tags = selectedTags
         )
 
@@ -124,13 +149,41 @@ class AddExpenseViewModel(
         }
     }
 
+    fun onTagInputChanged(input: String) {
+        _tagInput.value = input
+    }
+
+    fun removeTag(tag: String) {
+        _currentTags.value = _currentTags.value.filter { it.name != tag }
+    }
+
+    fun onTagColorSelected(color: Color) {
+        _selectedTagColor.value = color
+    }
+
     fun clearAllInputs() {
         expenseName = ""
         expenseAmount = ""
         selectedCurrency = Currency.MXN
         expenseDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        selectedPaymentMethod = null // Clear selection
-        selectedCategory = null // Clear selection
-        selectedTags = emptyList() // Clear selection
+        selectedPaymentMethod = null
+        selectedCategory = null
+        selectedTags = emptyList()
+
+        _tagInput.value = ""
+        _currentTags.value = emptyList()
+        _selectedTagColor.value = SuggestedTagColors.colors.first()
     }
+}
+
+object SuggestedTagColors {
+    val colors = listOf(
+        Color(0xFFE57373),
+        Color(0xFF81C784),
+        Color(0xFF64B5F6),
+        Color(0xFFFFD54F),
+        Color(0xFFBA68C8),
+        Color(0xFF90A4AE),
+        Color(0xFFFFB74D)
+    )
 }

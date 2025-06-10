@@ -15,13 +15,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow // Para el selector de color
+import androidx.compose.foundation.lazy.items // Para el selector de color
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape // Para los selectores de color
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check // Para indicar color seleccionado
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
@@ -49,8 +56,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,6 +67,9 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import org.expensetrackerui.data.model.Currency
+import org.expensetrackerui.data.model.TagWithColor // Importar la nueva clase de datos
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.luminance
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -69,6 +81,10 @@ fun AddExpenseScreen(
 ) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
+
+    val tagInput by viewModel.tagInput.collectAsState()
+    val currentTags by viewModel.currentTags.collectAsState()
+    val selectedTagColor by viewModel.selectedTagColor.collectAsState() // Nuevo: Color seleccionado
 
     Column(
         modifier = modifier
@@ -93,7 +109,7 @@ fun AddExpenseScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
+                    contentDescription = "Cerrar",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -113,7 +129,7 @@ fun AddExpenseScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Clear fields",
+                    contentDescription = "Limpiar campos",
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -132,13 +148,12 @@ fun AddExpenseScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        // --- Fix for Currency Dropdown ---
-        Box(modifier = Modifier.fillMaxWidth()) { // Wrap in a Box
+        Box(modifier = Modifier.fillMaxWidth()) {
             var showCurrencyDropdown by remember { mutableStateOf(false) }
             val currencyOptions = Currency.entries.toList()
             ExpenseDropdownField(
                 value = viewModel.selectedCurrency.name,
-                placeholder = "Currency",
+                placeholder = "Moneda",
                 onClick = { showCurrencyDropdown = true }
             )
             DropdownMenu(
@@ -161,12 +176,12 @@ fun AddExpenseScreen(
         var showDatePicker by remember { mutableStateOf(false) }
         ExpenseDropdownField(
             value = viewModel.expenseDate.toString(),
-            placeholder = "Date",
+            placeholder = "Fecha",
             onClick = { showDatePicker = true },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.DateRange,
-                    contentDescription = "Select date",
+                    contentDescription = "Seleccionar fecha",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -190,7 +205,7 @@ fun AddExpenseScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showDatePicker = false }) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Cancelar", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             ) {
@@ -198,8 +213,7 @@ fun AddExpenseScreen(
             }
         }
 
-        // --- Fix for Payment Method Dropdown ---
-        Box(modifier = Modifier.fillMaxWidth()) { // Wrap in a Box
+        Box(modifier = Modifier.fillMaxWidth()) {
             var showPaymentMethodDropdown by remember { mutableStateOf(false) }
             val selectedMethodText =
                 viewModel.selectedPaymentMethod?.name?.replace("_", " ")?.lowercase()
@@ -259,17 +273,82 @@ fun AddExpenseScreen(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth()
         )
-        FlowRow(
+
+        // Selector de color para las etiquetas
+        LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            viewModel.tags.forEach { tag ->
-                SelectableChip(
-                    text = tag.name.lowercase().replaceFirstChar { it.uppercase() },
-                    isSelected = viewModel.selectedTags.contains(tag),
-                    onClick = { viewModel.onTagToggled(tag) }
+            items(SuggestedTagColors.colors) { color ->
+                ColorOption(
+                    color = color,
+                    isSelected = color == selectedTagColor,
+                    onClick = { viewModel.onTagColorSelected(color) }
                 )
+            }
+        }
+        TextField(
+            value = tagInput,
+            onValueChange = viewModel::onTagInputChanged,
+            placeholder = { Text("Escribe una etiqueta...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                errorContainerColor = MaterialTheme.colorScheme.errorContainer,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            ),
+            textStyle = LocalTextStyle.current.copy(
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    viewModel.addTag(tagInput, selectedTagColor) { errorMessage -> // Pasa el color aquí
+                        scope.launch { snackbarHostState.showSnackbar(errorMessage) }
+                    }
+                }
+            ),
+            trailingIcon = {
+                androidx.compose.material3.IconButton(
+                    onClick = {
+                        viewModel.addTag(tagInput, selectedTagColor) { errorMessage -> // Pasa el color aquí
+                            scope.launch { snackbarHostState.showSnackbar(errorMessage) }
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Agregar etiqueta",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            singleLine = true
+        )
+
+        if (currentTags.isNotEmpty()) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                currentTags.forEach { tagWithColor -> // Iterar sobre TagWithColor
+                    RemovableTagChip(
+                        tagWithColor = tagWithColor, // Pasar el objeto completo
+                        onRemove = { viewModel.removeTag(tagWithColor.name) } // Eliminar por nombre
+                    )
+                }
             }
         }
 
@@ -279,7 +358,7 @@ fun AddExpenseScreen(
             onClick = {
                 viewModel.saveExpense(
                     onSuccess = {
-                        scope.launch { snackbarHostState.showSnackbar("Expense saved successfully!") }
+                        scope.launch { snackbarHostState.showSnackbar("Gasto guardado exitosamente!") }
                         onClose()
                     },
                     onError = { message ->
@@ -306,6 +385,8 @@ fun AddExpenseScreen(
         }
     }
 }
+
+// Reusable Composables (ExpenseInputField, ExpenseDropdownField, SelectableChip) remain the same
 
 @Composable
 fun ExpenseInputField(
@@ -429,5 +510,70 @@ fun SelectableChip(
             textAlign = TextAlign.Center,
             fontSize = 14.sp
         )
+    }
+}
+
+@Composable
+fun RemovableTagChip(
+    tagWithColor: TagWithColor, // Ahora recibe un objeto TagWithColor
+    onRemove: (String) -> Unit
+) {
+    androidx.compose.material3.Surface(
+        modifier = Modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = tagWithColor.color, // Usar el color de la etiqueta
+        shadowElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = tagWithColor.name,
+                // Calcular un color de texto contrastante
+                color = if (tagWithColor.color.luminance() > 0.5f) Color.Black else Color.White,
+                fontSize = 14.sp
+            )
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Eliminar etiqueta",
+                modifier = Modifier
+                    .size(16.dp)
+                    .clickable { onRemove(tagWithColor.name) },
+                // Calcular un color de ícono contrastante
+                tint = if (tagWithColor.color.luminance() > 0.5f) Color.Black.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.7f)
+            )
+        }
+    }
+}
+
+@Composable
+fun ColorOption(
+    color: Color,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(32.dp) // Tamaño del círculo de color
+            .clip(CircleShape)
+            .background(color)
+            .border(
+                width = 2.dp,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                shape = CircleShape
+            )
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Color seleccionado",
+                tint = if (color.luminance() > 0.5f) Color.Black else Color.White, // Color del check
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
