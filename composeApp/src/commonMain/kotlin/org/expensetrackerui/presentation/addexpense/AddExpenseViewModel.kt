@@ -46,7 +46,7 @@ class AddExpenseViewModel(
         private set
     var selectedCategory by mutableStateOf<ExpenseCategory?>(null)
         private set
-    var selectedTags by mutableStateOf(emptyList<ExpenseTag>())
+    var selectedTags by mutableStateOf(emptyList<TagWithColor>())
         private set
 
     private val _tagInput = MutableStateFlow("")
