@@ -25,7 +25,6 @@ class ShowExpensesViewModel(
     private val viewModelScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private val _allExpenses = MutableStateFlow<List<Expense>>(emptyList())
-    val allExpenses: StateFlow<List<Expense>> = _allExpenses
 
     // --- Filter Options ---
     val availableCategories: StateFlow<List<ExpenseCategory>> =
@@ -40,71 +39,125 @@ class ShowExpensesViewModel(
         emptyList()
     )
 
-    // --- Selected Filters ---
-    private val _selectedCategories = MutableStateFlow(emptySet<ExpenseCategory>())
-    val selectedCategories: StateFlow<Set<ExpenseCategory>> = _selectedCategories.asStateFlow()
+    // --- Staging areas for filters (what the user has selected but not yet applied) ---
+    private val _stagedSelectedCategories = MutableStateFlow(emptySet<ExpenseCategory>())
+    val stagedSelectedCategories: StateFlow<Set<ExpenseCategory>> = _stagedSelectedCategories.asStateFlow()
 
-    private val _selectedPaymentMethods = MutableStateFlow(emptySet<PaymentMethod>())
-    val selectedPaymentMethods: StateFlow<Set<PaymentMethod>> =
-        _selectedPaymentMethods.asStateFlow()
+    private val _stagedSelectedPaymentMethods = MutableStateFlow(emptySet<PaymentMethod>())
+    val stagedSelectedPaymentMethods: StateFlow<Set<PaymentMethod>> = _stagedSelectedPaymentMethods.asStateFlow()
 
-    private val _selectedTags = MutableStateFlow(emptySet<String>())
-    val selectedTags: StateFlow<Set<String>> = _selectedTags.asStateFlow()
+    private val _stagedSelectedTags = MutableStateFlow(emptySet<String>())
+    val stagedSelectedTags: StateFlow<Set<String>> = _stagedSelectedTags.asStateFlow()
 
-    // --- Date Range Filters ---
-    private val _startDate = MutableStateFlow<LocalDate?>(null)
-    val startDate: StateFlow<LocalDate?> = _startDate.asStateFlow()
+    private val _stagedStartDate = MutableStateFlow<LocalDate?>(null)
+    val stagedStartDate: StateFlow<LocalDate?> = _stagedStartDate.asStateFlow()
 
-    private val _endDate = MutableStateFlow<LocalDate?>(null)
-    val endDate: StateFlow<LocalDate?> = _endDate.asStateFlow()
+    private val _stagedEndDate = MutableStateFlow<LocalDate?>(null)
+    val stagedEndDate: StateFlow<LocalDate?> = _stagedEndDate.asStateFlow()
+
+    // --- Currently active filters (what is actually being applied to the data) ---
+    private val _activeSelectedCategories = MutableStateFlow(emptySet<ExpenseCategory>())
+    val activeSelectedCategories: StateFlow<Set<ExpenseCategory>> = _activeSelectedCategories.asStateFlow()
+
+    private val _activeSelectedPaymentMethods = MutableStateFlow(emptySet<PaymentMethod>())
+    val activeSelectedPaymentMethods: StateFlow<Set<PaymentMethod>> = _activeSelectedPaymentMethods.asStateFlow()
+
+    private val _activeSelectedTags = MutableStateFlow(emptySet<String>())
+    val activeSelectedTags: StateFlow<Set<String>> = _activeSelectedTags.asStateFlow()
+
+    private val _activeStartDate = MutableStateFlow<LocalDate?>(null)
+    val activeStartDate: StateFlow<LocalDate?> = _activeStartDate.asStateFlow()
+
+    private val _activeEndDate = MutableStateFlow<LocalDate?>(null)
+    val activeEndDate: StateFlow<LocalDate?> = _activeEndDate.asStateFlow()
 
 
-    // --- Functions to toggle selected filters ---
+    // --- Functions to toggle staged filters (these do not immediately re-filter) ---
     fun toggleCategoryFilter(category: ExpenseCategory) {
-        _selectedCategories.update { current ->
+        _stagedSelectedCategories.update { current ->
             if (current.contains(category)) current - category else current + category
         }
     }
 
     fun togglePaymentMethodFilter(method: PaymentMethod) {
-        _selectedPaymentMethods.update { current ->
+        _stagedSelectedPaymentMethods.update { current ->
             if (current.contains(method)) current - method else current + method
         }
     }
 
     fun toggleTagFilter(tag: String) {
-        _selectedTags.update { current ->
+        _stagedSelectedTags.update { current ->
             if (current.contains(tag)) current - tag else current + tag
         }
     }
 
-    fun setStartDate(date: LocalDate?) {
-        _startDate.value = date
-        if (date != null && _endDate.value != null && _endDate.value!! < date) {
-            _endDate.value = date
+    fun setStagedStartDate(date: LocalDate?) {
+        _stagedStartDate.value = date
+        // Adjust end date if start date is after current end date
+        if (date != null && _stagedEndDate.value != null && _stagedEndDate.value!! < date) {
+            _stagedEndDate.value = date
         }
     }
 
-    fun setEndDate(date: LocalDate?) {
-        _endDate.value = date
-        if (date != null && _startDate.value != null && _startDate.value!! > date) {
-            _startDate.value = date
+    fun setStagedEndDate(date: LocalDate?) {
+        _stagedEndDate.value = date
+        // Adjust start date if end date is before current start date
+        if (date != null && _stagedStartDate.value != null && _stagedStartDate.value!! > date) {
+            _stagedStartDate.value = date
         }
     }
 
-    fun clearDateRangeFilter() {
-        _startDate.value = null
-        _endDate.value = null
+    fun clearStagedDateRangeFilter() {
+        _stagedStartDate.value = null
+        _stagedEndDate.value = null
     }
 
+    /**
+     * Applies the currently staged filters to the active filters, triggering a re-filtering
+     * of the expenses. This should be called when the "Apply Filters" button is clicked.
+     */
+    fun applyFilters() {
+        _activeSelectedCategories.value = _stagedSelectedCategories.value
+        _activeSelectedPaymentMethods.value = _stagedSelectedPaymentMethods.value
+        _activeSelectedTags.value = _stagedSelectedTags.value
+        _activeStartDate.value = _stagedStartDate.value
+        _activeEndDate.value = _stagedEndDate.value
+        // The expensesGroupedByDate flow will automatically react to these changes
+    }
+
+    /**
+     * Resets all staged filters to their default empty state.
+     */
+    fun resetStagedFilters() {
+        _stagedSelectedCategories.value = emptySet()
+        _stagedSelectedPaymentMethods.value = emptySet()
+        _stagedSelectedTags.value = emptySet()
+        _stagedStartDate.value = null
+        _stagedEndDate.value = null
+        // Optionally, you might want to immediately apply these cleared filters
+        // For a "Clear All" button that instantly clears, call applyFilters() here:
+        // applyFilters()
+    }
+
+    /**
+     * Clears all staged filters and then immediately applies them.
+     * This is useful for a "Clear All Filters" button.
+     */
+    fun clearAndApplyAllFilters() {
+        resetStagedFilters() // Clear the staged filters
+        applyFilters()       // Apply the now-empty staged filters
+    }
+
+
+    // Combined Flow for filtered expenses (uses active filters)
     val expensesGroupedByDate: StateFlow<Map<LocalDate, List<Expense>>> =
         combine(
             _allExpenses,
-            _selectedCategories,
-            _selectedPaymentMethods,
-            _selectedTags,
-            _startDate,
-            _endDate
+            _activeSelectedCategories, // Use active filters here
+            _activeSelectedPaymentMethods, // Use active filters here
+            _activeSelectedTags, // Use active filters here
+            _activeStartDate, // Use active filters here
+            _activeEndDate // Use active filters here
         ) { args ->
             val expenses = args[0] as List<Expense>
             val categories = args[1] as Set<ExpenseCategory>
@@ -145,6 +198,12 @@ class ShowExpensesViewModel(
 
     fun initialize() {
         loadAllExpenses()
+        // Initialize staged filters with the current active filters when the screen loads
+        _stagedSelectedCategories.value = _activeSelectedCategories.value
+        _stagedSelectedPaymentMethods.value = _activeSelectedPaymentMethods.value
+        _stagedSelectedTags.value = _activeSelectedTags.value
+        _stagedStartDate.value = _activeStartDate.value
+        _stagedEndDate.value = _activeEndDate.value
     }
 
     private fun loadAllExpenses() {
