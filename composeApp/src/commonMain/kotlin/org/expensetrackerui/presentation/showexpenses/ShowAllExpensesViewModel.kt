@@ -57,22 +57,15 @@ class ShowExpensesViewModel(
 
     // --- Currently active filters (what is actually being applied to the data) ---
     private val _activeSelectedCategories = MutableStateFlow(emptySet<ExpenseCategory>())
-    val activeSelectedCategories: StateFlow<Set<ExpenseCategory>> = _activeSelectedCategories.asStateFlow()
 
     private val _activeSelectedPaymentMethods = MutableStateFlow(emptySet<PaymentMethod>())
-    val activeSelectedPaymentMethods: StateFlow<Set<PaymentMethod>> = _activeSelectedPaymentMethods.asStateFlow()
 
     private val _activeSelectedTags = MutableStateFlow(emptySet<String>())
-    val activeSelectedTags: StateFlow<Set<String>> = _activeSelectedTags.asStateFlow()
 
     private val _activeStartDate = MutableStateFlow<LocalDate?>(null)
-    val activeStartDate: StateFlow<LocalDate?> = _activeStartDate.asStateFlow()
 
     private val _activeEndDate = MutableStateFlow<LocalDate?>(null)
-    val activeEndDate: StateFlow<LocalDate?> = _activeEndDate.asStateFlow()
 
-
-    // --- Functions to toggle staged filters (these do not immediately re-filter) ---
     fun toggleCategoryFilter(category: ExpenseCategory) {
         _stagedSelectedCategories.update { current ->
             if (current.contains(category)) current - category else current + category
@@ -134,20 +127,7 @@ class ShowExpensesViewModel(
         _stagedSelectedTags.value = emptySet()
         _stagedStartDate.value = null
         _stagedEndDate.value = null
-        // Optionally, you might want to immediately apply these cleared filters
-        // For a "Clear All" button that instantly clears, call applyFilters() here:
-        // applyFilters()
     }
-
-    /**
-     * Clears all staged filters and then immediately applies them.
-     * This is useful for a "Clear All Filters" button.
-     */
-    fun clearAndApplyAllFilters() {
-        resetStagedFilters() // Clear the staged filters
-        applyFilters()       // Apply the now-empty staged filters
-    }
-
 
     // Combined Flow for filtered expenses (uses active filters)
     val expensesGroupedByDate: StateFlow<Map<LocalDate, List<Expense>>> =
@@ -198,7 +178,6 @@ class ShowExpensesViewModel(
 
     fun initialize() {
         loadAllExpenses()
-        // Initialize staged filters with the current active filters when the screen loads
         _stagedSelectedCategories.value = _activeSelectedCategories.value
         _stagedSelectedPaymentMethods.value = _activeSelectedPaymentMethods.value
         _stagedSelectedTags.value = _activeSelectedTags.value

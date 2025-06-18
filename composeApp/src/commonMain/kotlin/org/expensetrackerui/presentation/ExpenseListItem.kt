@@ -11,6 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.Paid
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,15 +24,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.expensetrackerui.data.model.Transaction
+import org.expensetrackerui.data.model.Expense
+import org.expensetrackerui.data.model.ExpenseCategory
 import org.expensetrackerui.util.CurrencyFormatter
 
 @Composable
-fun TransactionListItem(transaction: Transaction) {
+fun ExpenseListItem(expense: Expense) {
+    val transactionIcon: ImageVector = when (expense.category) {
+        ExpenseCategory.NECESIDAD -> Icons.Default.ShoppingCart
+        ExpenseCategory.GASTO_NO_PLANEADO -> Icons.Default.LocalHospital
+        ExpenseCategory.GUSTO -> Icons.Default.Fastfood
+        ExpenseCategory.DEUDA -> Icons.Default.Paid
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -44,32 +58,32 @@ fun TransactionListItem(transaction: Transaction) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = transaction.icon,
+                    imageVector = transactionIcon,
                     contentDescription = null,
-                    tint = Color(0xFF2563EB), // Or MaterialTheme.colorScheme.primary
+                    tint = Color(0xFF2563EB),
                     modifier = Modifier.size(24.dp)
                 )
             }
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(
-                    text = transaction.storeName,
+                    text = expense.name,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     color = Color.Black
                 )
                 Text(
-                    text = transaction.category.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                    text = expense.category.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }, // Use expense.category.name
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
             }
         }
         Text(
-            text = CurrencyFormatter.formatAmount(transaction.amount),
+            text = CurrencyFormatter.formatAmount(expense.amount), // Use expense.amount directly
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
-            color = if (transaction.amount < 0) Color(0XFFbf100a) else Color(0XFF2d8c3a),
+            color = if (expense.amount < 0) Color(0XFFbf100a) else Color(0XFF2d8c3a),
             textAlign = TextAlign.End
         )
     }

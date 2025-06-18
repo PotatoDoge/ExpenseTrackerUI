@@ -68,15 +68,15 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
-import org.expensetrackerui.presentation.TransactionListItem
 import org.expensetrackerui.util.formatDateForDisplay
-import androidx.compose.runtime.LaunchedEffect // Import LaunchedEffect
+import androidx.compose.runtime.LaunchedEffect
+import org.expensetrackerui.presentation.ExpenseListItem
 
 sealed class FilterType {
-    object Category : FilterType()
-    object PaymentMethod : FilterType()
-    object Tags : FilterType()
-    object Period : FilterType()
+    data object Category : FilterType()
+    data object PaymentMethod : FilterType()
+    data object Tags : FilterType()
+    data object Period : FilterType()
 }
 
 data class FilterChipConfig(val text: String, val type: FilterType)
@@ -96,52 +96,39 @@ fun ShowAllExpensesScreen(
 
     val expensesByDate by viewModel.expensesGroupedByDate.collectAsState()
 
-    // --- Filter UI State ---
     var openFilterMenuType by remember { mutableStateOf<FilterType?>(null) }
 
-    // Collected *staged* filter states from ViewModel (for UI display)
     val stagedSelectedCategories by viewModel.stagedSelectedCategories.collectAsState()
     val stagedSelectedPaymentMethods by viewModel.stagedSelectedPaymentMethods.collectAsState()
     val stagedSelectedTags by viewModel.stagedSelectedTags.collectAsState()
     val stagedStartDate by viewModel.stagedStartDate.collectAsState()
     val stagedEndDate by viewModel.stagedEndDate.collectAsState()
 
-    // Available filter options from ViewModel
     val availableCategories by viewModel.availableCategories.collectAsState()
     val availablePaymentMethods by viewModel.availablePaymentMethods.collectAsState()
     val availableTags by viewModel.availableTags.collectAsState()
 
-
-    // --- Date Picker Dialog states ---
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
-    // --- LazyColumn State for Scrolling ---
     val lazyColumnState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    // --- State to control "Scroll to Top" button visibility ---
     val showScrollToTopButton by remember {
-        // Derived state to observe if the first item is not visible (i.e., scrolled down)
-        // This will recompose when firstVisibleItemIndex changes.
-        // We set a threshold (e.g., 5 items) before showing the button to avoid flickering
-        // when scrolling just a little.
         derivedStateOf {
-            lazyColumnState.firstVisibleItemIndex > 0 // Show if not at the very top
+            lazyColumnState.firstVisibleItemIndex > 0
         }
     }
 
 
-    // --- LaunchedEffect for reliable scroll to top after filtering/clearing ---
     LaunchedEffect(expensesByDate) {
         if (expensesByDate.isNotEmpty()) {
-            delay(50) // Small delay to allow recomposition and layout calculation
+            delay(50)
             lazyColumnState.scrollToItem(0)
         }
     }
 
-    // The main layout is now a Box to allow floating elements
-    Box(modifier = modifier.fillMaxSize()) { // Added a root Box
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -167,7 +154,6 @@ fun ShowAllExpensesScreen(
                 )
             }
 
-            // --- Scrollable Row of Filter Chips, "Buscar" Button, and "Limpiar Filtros" Button ---
             val filterChips = listOf(
                 FilterChipConfig("Categoría", FilterType.Category),
                 FilterChipConfig("Método de Pago", FilterType.PaymentMethod),
@@ -179,12 +165,11 @@ fun ShowAllExpensesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
-                    .horizontalScroll(rememberScrollState()), // Allows horizontal scrolling if content overflows
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically // Align items vertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
 
-                // Condition to enable "Limpiar Filtros" button
                 val anyStagedFilterPresent =
                     stagedSelectedCategories.isNotEmpty() ||
                             stagedSelectedPaymentMethods.isNotEmpty() ||
@@ -192,7 +177,6 @@ fun ShowAllExpensesScreen(
                             stagedStartDate != null ||
                             stagedEndDate != null
 
-                // --- "Buscar" Button, always enabled, applies staged filters ---
                 Surface(
                     modifier = Modifier
                         .padding(start = 0.dp) // No starting padding for the first element
@@ -225,14 +209,14 @@ fun ShowAllExpensesScreen(
 
                 Surface(
                     modifier = Modifier
-                        .padding(start = 8.dp) // Add space between "Buscar" and "Limpiar"
+                        .padding(start = 8.dp)
                         .height(32.dp)
                         .wrapContentWidth()
                         .clickable(
-                            enabled = anyStagedFilterPresent, // Enabled if there are staged filters to clear
+                            enabled = anyStagedFilterPresent,
                             onClick = {
-                                viewModel.resetStagedFilters() // ONLY reset staged filters
-                                openFilterMenuType = null // Close any open filter menu
+                                viewModel.resetStagedFilters()
+                                openFilterMenuType = null
                             }
                         ),
                     shape = RoundedCornerShape(16.dp),
@@ -241,7 +225,7 @@ fun ShowAllExpensesScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = 8.dp), // Adjusted padding for icon
+                            .padding(horizontal = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -557,7 +541,7 @@ fun ShowAllExpensesScreen(
                         }
 
                         items(expensesForThisDate, key = { it.id }) { expense ->
-                            TransactionListItem(transaction = expense.toTransactionForDisplay())
+                            ExpenseListItem(expense = expense)
                         }
 
                         if (index < dates.lastIndex) {
@@ -586,25 +570,25 @@ fun ShowAllExpensesScreen(
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier
-                .align(Alignment.BottomEnd) // Position at bottom end of the parent Box
-                .padding(24.dp) // Padding from the edges
+                .align(Alignment.BottomEnd)
+                .padding(24.dp)
         ) {
             Surface(
                 modifier = Modifier
                     .size(56.dp) // Standard FAB size
                     .clickable {
                         coroutineScope.launch {
-                            lazyColumnState.animateScrollToItem(0) // Smooth scroll to top
+                            lazyColumnState.animateScrollToItem(0)
                         }
                     },
-                shape = CircleShape, // Make it a circular button
+                shape = CircleShape,
                 color = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                shadowElevation = 6.dp // Add a subtle shadow for elevation
+                shadowElevation = 6.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Default.ArrowUpward, // Use the new upward arrow icon
+                        imageVector = Icons.Default.ArrowUpward,
                         contentDescription = "Scroll to top",
                         modifier = Modifier.size(24.dp)
                     )
