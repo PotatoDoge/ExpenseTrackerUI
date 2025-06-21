@@ -1,6 +1,7 @@
 package org.expensetrackerui.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,9 +33,10 @@ import androidx.compose.ui.unit.sp
 import org.expensetrackerui.data.model.Expense
 import org.expensetrackerui.data.model.ExpenseCategory
 import org.expensetrackerui.util.CurrencyFormatter
+import kotlin.math.exp
 
 @Composable
-fun ExpenseListItem(expense: Expense) {
+fun ExpenseListItem(expense: Expense, onExpenseListItemClick: (Expense) -> Unit) {
     val transactionIcon: ImageVector = when (expense.category) {
         ExpenseCategory.NECESIDAD -> Icons.Default.ShoppingCart
         ExpenseCategory.GASTO_NO_PLANEADO -> Icons.Default.LocalHospital
@@ -45,6 +47,7 @@ fun ExpenseListItem(expense: Expense) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onExpenseListItemClick(expense) }
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

@@ -1,12 +1,16 @@
 package org.expensetrackerui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember // Keep for Preview defaults
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import org.expensetrackerui.data.model.AppScreen
 import org.expensetrackerui.presentation.AppBottomNavigationBar
@@ -14,6 +18,7 @@ import org.expensetrackerui.presentation.MainViewModel
 import org.expensetrackerui.presentation.PlaceholderScreen
 import org.expensetrackerui.presentation.addexpense.AddExpenseScreen
 import org.expensetrackerui.presentation.addexpense.AddExpenseViewModel
+import org.expensetrackerui.presentation.expensedetail.ExpenseDetailScreen
 import org.expensetrackerui.presentation.home.HomeScreen
 import org.expensetrackerui.presentation.home.HomeViewModel
 import org.expensetrackerui.presentation.showexpenses.ShowAllExpensesScreen
@@ -56,16 +61,20 @@ fun App(
 ) {
     MaterialTheme {
         val currentScreen = mainViewModel.currentScreen.collectAsState().value
+        val showExpenseDetail by mainViewModel.showExpenseDetail.collectAsState()
+        val selectedExpenseForDetail by mainViewModel.selectedExpenseForDetail.collectAsState()
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             bottomBar = {
-                AppBottomNavigationBar(
-                    currentScreen = currentScreen,
-                    onScreenSelected = { screen -> mainViewModel.selectScreen(screen) }
-                )
+                if (!showExpenseDetail) {
+                    AppBottomNavigationBar(
+                        currentScreen = currentScreen,
+                        onScreenSelected = { screen -> mainViewModel.selectScreen(screen) }
+                    )
+                }
             }
-        ) { paddingValues ->
+        )  { paddingValues ->
             when (currentScreen) {
                 AppScreen.Home -> HomeScreen(
                     modifier = Modifier.padding(paddingValues),
@@ -82,7 +91,8 @@ fun App(
 
                 AppScreen.ExpensesList -> ShowAllExpensesScreen(
                     modifier = Modifier.padding(paddingValues),
-                    viewModel = showExpensesViewModel)
+                    viewModel = showExpensesViewModel,
+                    mainViewModel = mainViewModel)
 
                 AppScreen.Categories -> PlaceholderScreen(
                     "Categorías",
@@ -93,6 +103,19 @@ fun App(
                     "Ajustes",
                     modifier = Modifier.padding(paddingValues)
                 )
+            }
+            AnimatedVisibility(
+                visible = showExpenseDetail && selectedExpenseForDetail != null,
+                enter = slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }),
+                exit = slideOutHorizontally(targetOffsetX = { fullWidth -> -fullWidth })
+            ) {
+                selectedExpenseForDetail?.let { expense ->
+                    ExpenseDetailScreen(
+                        expense = expense,
+                        onClose = { mainViewModel.hideExpenseDetail() },
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
             }
         }
     }

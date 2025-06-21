@@ -71,6 +71,7 @@ import kotlinx.datetime.todayIn
 import org.expensetrackerui.util.formatDateForDisplay
 import androidx.compose.runtime.LaunchedEffect
 import org.expensetrackerui.presentation.ExpenseListItem
+import org.expensetrackerui.presentation.MainViewModel
 
 sealed class FilterType {
     data object Category : FilterType()
@@ -85,7 +86,8 @@ data class FilterChipConfig(val text: String, val type: FilterType)
 @Composable
 fun ShowAllExpensesScreen(
     modifier: Modifier = Modifier,
-    viewModel: ShowExpensesViewModel
+    viewModel: ShowExpensesViewModel,
+    mainViewModel: MainViewModel
 ) {
     DisposableEffect(viewModel) {
         viewModel.initialize()
@@ -541,7 +543,11 @@ fun ShowAllExpensesScreen(
                         }
 
                         items(expensesForThisDate, key = { it.id }) { expense ->
-                            ExpenseListItem(expense = expense)
+                            ExpenseListItem(
+                                expense = expense,
+                                onExpenseListItemClick = { clickedExpense ->
+                                    mainViewModel.showExpenseDetail(clickedExpense)
+                                })
                         }
 
                         if (index < dates.lastIndex) {
