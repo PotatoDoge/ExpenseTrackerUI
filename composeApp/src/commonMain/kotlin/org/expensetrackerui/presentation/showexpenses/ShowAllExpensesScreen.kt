@@ -136,8 +136,7 @@ fun ShowAllExpensesScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
                 .padding(
-                    horizontal = 24.dp,
-                    vertical = 16.dp
+                    horizontal = 24.dp
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

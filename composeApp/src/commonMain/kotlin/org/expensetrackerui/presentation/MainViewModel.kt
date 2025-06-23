@@ -1,11 +1,13 @@
 package org.expensetrackerui.presentation
 
+import androidx.compose.animation.core.MutableTransitionState // Import this
+import androidx.compose.runtime.Composable // Needed for the helper composable
+import androidx.compose.runtime.LaunchedEffect // Needed for the helper composable
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.expensetrackerui.data.model.AppScreen
 import org.expensetrackerui.data.model.Expense
-
 
 class MainViewModel : ViewModel() {
 
@@ -18,6 +20,8 @@ class MainViewModel : ViewModel() {
     private val _showExpenseDetail = MutableStateFlow(false)
     val showExpenseDetail: StateFlow<Boolean> = _showExpenseDetail
 
+    val expenseDetailTransitionState = MutableTransitionState(false) // false means initially hidden
+
     fun selectScreen(screen: AppScreen) {
         _currentScreen.value = screen
         if (screen != AppScreen.ExpensesList) {
@@ -28,10 +32,25 @@ class MainViewModel : ViewModel() {
     fun showExpenseDetail(expense: Expense) {
         _selectedExpenseForDetail.value = expense
         _showExpenseDetail.value = true
+        expenseDetailTransitionState.targetState = true
     }
 
     fun hideExpenseDetail() {
         _showExpenseDetail.value = false
-        _selectedExpenseForDetail.value = null
+        expenseDetailTransitionState.targetState = false
+    }
+
+    /**
+     * This Composable function should be called within the main App composable.
+     * It observes the animation state and cleans up `_selectedExpenseForDetail`
+     * when the exit animation is complete.
+     */
+    @Composable
+    fun ObserveExpenseDetailAnimationAndCleanup() {
+        LaunchedEffect(expenseDetailTransitionState.currentState, expenseDetailTransitionState.isIdle) {
+            if (!expenseDetailTransitionState.targetState && expenseDetailTransitionState.isIdle) {
+                _selectedExpenseForDetail.value = null
+            }
+        }
     }
 }

@@ -60,21 +60,23 @@ fun App(
     }
 ) {
     MaterialTheme {
-        val currentScreen = mainViewModel.currentScreen.collectAsState().value
-        val showExpenseDetail by mainViewModel.showExpenseDetail.collectAsState()
+        val currentScreen by mainViewModel.currentScreen.collectAsState()
         val selectedExpenseForDetail by mainViewModel.selectedExpenseForDetail.collectAsState()
+        val expenseDetailTransitionState = mainViewModel.expenseDetailTransitionState
+        mainViewModel.ObserveExpenseDetailAnimationAndCleanup()
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             bottomBar = {
-                if (!showExpenseDetail) {
+                val showNavbar by mainViewModel.showExpenseDetail.collectAsState()
+                if (!showNavbar) {
                     AppBottomNavigationBar(
                         currentScreen = currentScreen,
                         onScreenSelected = { screen -> mainViewModel.selectScreen(screen) }
                     )
                 }
             }
-        )  { paddingValues ->
+        ) { paddingValues ->
             when (currentScreen) {
                 AppScreen.Home -> HomeScreen(
                     modifier = Modifier.padding(paddingValues),
@@ -92,7 +94,8 @@ fun App(
                 AppScreen.ExpensesList -> ShowAllExpensesScreen(
                     modifier = Modifier.padding(paddingValues),
                     viewModel = showExpensesViewModel,
-                    mainViewModel = mainViewModel)
+                    mainViewModel = mainViewModel
+                )
 
                 AppScreen.Categories -> PlaceholderScreen(
                     "Categorías",
@@ -104,10 +107,11 @@ fun App(
                     modifier = Modifier.padding(paddingValues)
                 )
             }
+
             AnimatedVisibility(
-                visible = showExpenseDetail && selectedExpenseForDetail != null,
-                enter = slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }),
-                exit = slideOutHorizontally(targetOffsetX = { fullWidth -> -fullWidth })
+                visibleState = expenseDetailTransitionState,
+                enter = slideInHorizontally(initialOffsetX = { fullWidth -> fullWidth }),
+                exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth })
             ) {
                 selectedExpenseForDetail?.let { expense ->
                     ExpenseDetailScreen(
