@@ -41,7 +41,7 @@ fun App(
         HomeViewModel(
             budgetRepository = DummyBudgetRepository(),
             spendingRepository = DummySpendingRepository(),
-            transactionRepository = DummyTransactionRepository(),
+            expenseRepository = DummyExpenseRepository(),
             financialTipsRepository = DummyFinancialTipsRepository()
         )
     },
@@ -80,7 +80,8 @@ fun App(
             when (currentScreen) {
                 AppScreen.Home -> HomeScreen(
                     modifier = Modifier.padding(paddingValues),
-                    viewModel = homeViewModel
+                    viewModel = homeViewModel,
+                    mainViewModel = mainViewModel
                 )
 
                 AppScreen.AddExpense -> AddExpenseScreen(

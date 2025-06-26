@@ -43,7 +43,7 @@ val appModule = module {
         HomeViewModel(
             budgetRepository = get(),
             spendingRepository = get(),
-            transactionRepository = get(),
+            expenseRepository = get(),
             financialTipsRepository = get()
         )
     }

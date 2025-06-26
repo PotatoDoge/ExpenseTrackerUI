@@ -7,19 +7,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.expensetrackerui.data.model.BudgetSummary
+import org.expensetrackerui.data.model.Expense
 import org.expensetrackerui.data.model.FinancialTip
 import org.expensetrackerui.data.model.SpendingItem
-import org.expensetrackerui.data.model.Transaction
 import org.expensetrackerui.data.repository.BudgetRepository
+import org.expensetrackerui.data.repository.ExpenseRepository
 import org.expensetrackerui.data.repository.FinancialTipsRepository
 import org.expensetrackerui.data.repository.SpendingRepository
-import org.expensetrackerui.data.repository.TransactionRepository
 
 class HomeViewModel(
     private val budgetRepository: BudgetRepository,
     private val spendingRepository: SpendingRepository,
-    private val transactionRepository: TransactionRepository,
+    private val expenseRepository: ExpenseRepository,
     private val financialTipsRepository: FinancialTipsRepository
 ) {
 
@@ -34,22 +35,24 @@ class HomeViewModel(
     private val _categorySpending = MutableStateFlow<List<SpendingItem>>(emptyList())
     val categorySpending: StateFlow<List<SpendingItem>> = _categorySpending.asStateFlow()
 
-    private val _recentTransactions = MutableStateFlow<List<Transaction>>(emptyList())
-    val recentTransactions: StateFlow<List<Transaction>> = _recentTransactions.asStateFlow()
+    private val _recentExpenses = MutableStateFlow<List<Expense>>(emptyList())
+    val recentExpenses: StateFlow<List<Expense>> = _recentExpenses.asStateFlow()
 
     private val _financialTips = MutableStateFlow<List<FinancialTip>>(emptyList())
     val financialTips: StateFlow<List<FinancialTip>> = _financialTips.asStateFlow()
-
+    
     fun initialize() {
-        loadHomeScreenData()
-    }
+        viewModelScope.launch {
+            _budgetSummary.value = budgetRepository.getBudgetSummary()
+            _paymentMethodSpending.value = spendingRepository.getMappedPaymentMethodSpending()
+            _categorySpending.value = spendingRepository.getMappedCategorySpending()
+            _financialTips.value = financialTipsRepository.getFinancialTips()
 
-    private fun loadHomeScreenData() {
-        _budgetSummary.value = budgetRepository.getBudgetSummary()
-        _paymentMethodSpending.value = (spendingRepository).getMappedPaymentMethodSpending()
-        _categorySpending.value = (spendingRepository).getMappedCategorySpending()
-        _recentTransactions.value = transactionRepository.getRecentTransactions()
-        _financialTips.value = financialTipsRepository.getFinancialTips()
+            // Collect expenses from ExpenseRepository inside the coroutine
+            expenseRepository.getExpenses().collect { expenses ->
+                _recentExpenses.value = expenses.sortedByDescending { it.date }.take(5)
+            }
+        }
     }
 
     fun onCleared() {

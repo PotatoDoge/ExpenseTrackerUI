@@ -53,11 +53,13 @@ import expensetrackerui.composeapp.generated.resources.profile_pic
 import org.expensetrackerui.data.model.BudgetSummary
 import org.expensetrackerui.data.model.FinancialTip
 import org.expensetrackerui.data.model.SpendingItem
-import org.expensetrackerui.data.model.Transaction
+import org.expensetrackerui.data.model.Expense // Import Expense model
+import org.expensetrackerui.presentation.ExpenseListItem // Import ExpenseListItem
 import org.expensetrackerui.util.CurrencyFormatter
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.runtime.collectAsState
+import org.expensetrackerui.presentation.MainViewModel
 
 val tipBackgroundColors = listOf(
     Color(0xFFE0F7FA),
@@ -69,7 +71,8 @@ val tipBackgroundColors = listOf(
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    mainViewModel: MainViewModel
 ) {
 
     DisposableEffect(viewModel) {
@@ -82,7 +85,7 @@ fun HomeScreen(
     val budget = viewModel.budgetSummary.collectAsState().value
     val paymentMethodSpending = viewModel.paymentMethodSpending.collectAsState().value
     val categorySpending = viewModel.categorySpending.collectAsState().value
-    val recentTransactions = viewModel.recentTransactions.collectAsState().value
+    val recentExpenses = viewModel.recentExpenses.collectAsState().value
     val financialTips = viewModel.financialTips.collectAsState().value
 
     Column(
@@ -220,9 +223,14 @@ fun HomeScreen(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            recentTransactions.forEachIndexed { index, transaction ->
-                TransactionRow(transaction)
-                if (index < recentTransactions.lastIndex) {
+            recentExpenses.forEachIndexed { index, expense ->
+                ExpenseListItem(
+                    expense = expense,
+                    onExpenseListItemClick = { clickedExpense ->
+                        mainViewModel.showExpenseDetail(clickedExpense)
+                    }
+                )
+                if (index < recentExpenses.lastIndex) {
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 8.dp),
                         thickness = 0.5.dp,
@@ -234,6 +242,8 @@ fun HomeScreen(
         Spacer(Modifier.height(24.dp))
     }
 }
+
+// ... (BudgetCard, SpendingSection, TotalSpendingBar, FinancialTipCard remain unchanged)
 
 @Composable
 fun BudgetCard(budget: BudgetSummary) {
@@ -486,54 +496,5 @@ fun FinancialTipCard(tip: FinancialTip, backgroundColor: Color, onClick: () -> U
                 modifier = Modifier.fillMaxWidth()
             )
         }
-    }
-}
-
-@Composable
-fun TransactionRow(transaction: Transaction) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = transaction.icon,
-                    contentDescription = null,
-                    tint = Color(0xFF2563EB),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = transaction.storeName,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Text(
-                    text = transaction.category,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-        }
-        Text(
-            text = CurrencyFormatter.formatAmount(transaction.amount),
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            color = if (transaction.amount < 0) Color(0XFFbf100a) else Color(0XFF2d8c3a),
-            textAlign = TextAlign.End
-        )
     }
 }
