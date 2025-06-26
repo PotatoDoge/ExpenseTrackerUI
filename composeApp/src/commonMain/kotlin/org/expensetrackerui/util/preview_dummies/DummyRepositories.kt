@@ -156,9 +156,14 @@ class DummyGetExpenseCategoriesUseCase : GetExpenseCategoriesRepository {
 class DummyGetExpenseTagsUseCase : GetExpenseTagsRepository {
     override fun invoke(): List<ExpenseTag> {
         return listOf(
-            ExpenseTag.URGENT,
-            ExpenseTag.OPTIONAL,
-            ExpenseTag.NECESSARY
+            ExpenseTag.ESCUELA,
+            ExpenseTag.VACACIONES,
+            ExpenseTag.WALMART,
+            ExpenseTag.VIAJE_CDMX,
+            ExpenseTag.NAVIDAD_2024,
+            ExpenseTag.SUPER,
+            ExpenseTag.NOVIA,
+            ExpenseTag.SUSCRIPCION
         )
     }
 }
@@ -191,15 +196,13 @@ val commonExpenseNames = listOf(
 )
 
 val randomTagColorsList = listOf(
-    Color(0xFFE0BBE4), // Pastel purple
-    Color(0xFF957DAD), // Medium purple
-    Color(0xFFD291BC), // Light pink
-    Color(0xFFFEC8D8), // Light rose
-    Color(0xFFFFDFD3), // Peach
-    Color(0xFFCCE2CB), // Light green
-    Color(0xFFDAF7A6), // Pale green
-    Color(0xFFB5EAD7), // Mint green
-    Color(0xFFC7CEEA)  // Light blue
+    Color(0xFFE57373),
+    Color(0xFF81C784),
+    Color(0xFF64B5F6),
+    Color(0xFFFFD54F),
+    Color(0xFFBA68C8),
+    Color(0xFF90A4AE),
+    Color(0xFFFFB74D)
 )
 
 fun generateRandomDate(): LocalDate {
@@ -222,23 +225,27 @@ val sampleAllExpenses: List<Expense> = (1..100).map { id ->
     val randomCategory = allExpenseCategories.random()
     val randomPaymentMethod = allPaymentMethods.random()
     val randomDate = generateRandomDate()
-    val randomTags = (0..Random.nextInt(allExpenseTags.size)).map { // 0 to max tags
-        val tag = allExpenseTags.random()
-        val color = randomTagColorsList.random()
-        TagWithColor(tag.name, color)
-    }.distinct() // Ensure unique tags
+
+    val numberOfTags = Random.nextInt(allExpenseTags.size + 1) // 0 to max tags
+    val uniqueRandomTags =
+        allExpenseTags.shuffled(Random).take(numberOfTags) // Get unique ExpenseTag enums
+            .map { tag ->
+                val color = randomTagColorsList.random()
+                TagWithColor(tag.name, color)
+            }
 
     Expense(
         id = id.toString(),
         name = randomName,
-        amount = randomAmount*-1,
+        amount = randomAmount * -1,
         currency = Currency.MXN,
         date = randomDate,
         paymentMethod = randomPaymentMethod,
         category = randomCategory,
-        tags = randomTags
+        tags = uniqueRandomTags
     )
 }
+
 
 class DummyExpenseRepository : ExpenseRepository {
 
