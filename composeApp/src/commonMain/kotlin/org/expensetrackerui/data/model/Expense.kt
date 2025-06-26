@@ -27,5 +27,5 @@ enum class ExpenseCategory {
 }
 
 enum class ExpenseTag {
-    URGENT, OPTIONAL, NECESSARY // Your defined tags
+    ESCUELA, VACACIONES, WALMART, VIAJE_CDMX, NAVIDAD_2024, SUPER, NOVIA, SUSCRIPCION
 }
